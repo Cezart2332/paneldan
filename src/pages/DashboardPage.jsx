@@ -1,0 +1,42 @@
+import { useEffect, useState } from 'react';
+import { adminApi } from '../api';
+
+export default function DashboardPage() {
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    adminApi.stats().then(setStats).catch(() => {}).finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return <div className="page-loading">Se încarcă...</div>;
+
+  return (
+    <div className="page">
+      <div className="page-header">
+        <h1>Dashboard</h1>
+        <p>Sumar general al aplicației</p>
+      </div>
+      <div className="stats-grid">
+        <StatCard icon="👥" label="Utilizatori" value={stats?.totalUsers ?? '–'} color="blue" />
+        <StatCard icon="📝" label="Jurnale" value={stats?.totalEntries ?? '–'} color="green" />
+        <StatCard icon="❓" label="Întrebări" value={stats?.totalQuestions ?? '–'} color="purple" sub={`${stats?.newQuestions ?? 0} noi`} />
+        <StatCard icon="📅" label="Ședințe" value={stats?.totalMeetings ?? '–'} color="orange" sub={`${stats?.upcomingMeetings ?? 0} viitoare`} />
+        <StatCard icon="💳" label="Abonamente active" value={stats?.totalSubscriptions ?? '–'} color="teal" />
+      </div>
+    </div>
+  );
+}
+
+function StatCard({ icon, label, value, color, sub }) {
+  return (
+    <div className={`stat-card stat-card--${color}`}>
+      <div className="stat-card__icon">{icon}</div>
+      <div className="stat-card__body">
+        <div className="stat-card__value">{value}</div>
+        <div className="stat-card__label">{label}</div>
+        {sub && <div className="stat-card__sub">{sub}</div>}
+      </div>
+    </div>
+  );
+}
