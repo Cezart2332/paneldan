@@ -42,7 +42,15 @@ export const adminApi = {
   questions: (page = 1, status = '') => request(`/api/admin/questions?page=${page}&limit=50${status ? `&status=${status}` : ''}`),
   updateQuestion: (id, status) => request(`/api/admin/questions/${id}`, { method: 'PUT', body: { status } }),
   // Meetings
-  meetings: (page = 1, upcoming = false) => request(`/api/admin/meetings?page=${page}&limit=50${upcoming ? '&upcoming=1' : ''}`),
+  meetings: ({ page = 1, upcoming = false, limit = 50, from = '', to = '' } = {}) => {
+    const params = new URLSearchParams();
+    params.set('page', String(page));
+    params.set('limit', String(limit));
+    if (upcoming) params.set('upcoming', '1');
+    if (from) params.set('from', from);
+    if (to) params.set('to', to);
+    return request(`/api/admin/meetings?${params.toString()}`);
+  },
   createMeeting: (data) => request('/api/admin/meetings', { method: 'POST', body: data }),
   updateMeeting: (id, data) => request(`/api/admin/meetings/${id}`, { method: 'PUT', body: data }),
   deleteMeeting: (id) => request(`/api/admin/meetings/${id}`, { method: 'DELETE' }),

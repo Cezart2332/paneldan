@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { FiShield } from 'react-icons/fi';
 import { adminApi, setToken } from '../api';
 
 export default function LoginPage({ onLogin }) {
@@ -25,7 +26,7 @@ export default function LoginPage({ onLogin }) {
     <div className="login-page">
       <div className="login-card">
         <div className="login-logo">
-          <div className="login-logo-icon">🛡️</div>
+          <div className="login-logo-icon"><FiShield /></div>
           <h1>Panel Dan</h1>
           <p>Panou de administrare</p>
         </div>

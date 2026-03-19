@@ -1,12 +1,13 @@
 import { NavLink } from 'react-router-dom';
+import { FiBarChart2, FiCalendar, FiFileText, FiHelpCircle, FiLogOut, FiShield, FiUsers } from 'react-icons/fi';
 import { clearToken } from '../api';
 
 const links = [
-  { to: '/', icon: '📊', label: 'Dashboard' },
-  { to: '/users', icon: '👥', label: 'Utilizatori' },
-  { to: '/entries', icon: '📝', label: 'Jurnale' },
-  { to: '/questions', icon: '❓', label: 'Întrebări' },
-  { to: '/meetings', icon: '📅', label: 'Ședințe' },
+  { to: '/', icon: FiBarChart2, label: 'Dashboard' },
+  { to: '/users', icon: FiUsers, label: 'Utilizatori' },
+  { to: '/entries', icon: FiFileText, label: 'Jurnale' },
+  { to: '/questions', icon: FiHelpCircle, label: 'Întrebări' },
+  { to: '/meetings', icon: FiCalendar, label: 'Calendar' },
 ];
 
 export default function Sidebar({ onLogout }) {
@@ -18,7 +19,7 @@ export default function Sidebar({ onLogout }) {
   return (
     <aside className="sidebar">
       <div className="sidebar__brand">
-        <div className="sidebar__logo">🛡️</div>
+        <div className="sidebar__logo"><FiShield /></div>
         <span className="sidebar__title">Panel Dan</span>
       </div>
       <nav className="sidebar__nav">
@@ -29,14 +30,14 @@ export default function Sidebar({ onLogout }) {
             end={l.to === '/'}
             className={({ isActive }) => `sidebar__link${isActive ? ' sidebar__link--active' : ''}`}
           >
-            <span className="sidebar__link-icon">{l.icon}</span>
+            <span className="sidebar__link-icon"><l.icon /></span>
             <span className="sidebar__link-label">{l.label}</span>
           </NavLink>
         ))}
       </nav>
       <div className="sidebar__footer">
         <button className="sidebar__logout" onClick={handleLogout}>
-          🚪 Deconectare
+          <FiLogOut /> Deconectare
         </button>
       </div>
     </aside>

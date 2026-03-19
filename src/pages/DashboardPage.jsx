@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { FiCalendar, FiCreditCard, FiFileText, FiHelpCircle, FiUsers } from 'react-icons/fi';
 import { adminApi } from '../api';
 
 export default function DashboardPage() {
@@ -18,20 +19,21 @@ export default function DashboardPage() {
         <p>Sumar general al aplicației</p>
       </div>
       <div className="stats-grid">
-        <StatCard icon="👥" label="Utilizatori" value={stats?.totalUsers ?? '–'} color="blue" />
-        <StatCard icon="📝" label="Jurnale" value={stats?.totalEntries ?? '–'} color="green" />
-        <StatCard icon="❓" label="Întrebări" value={stats?.totalQuestions ?? '–'} color="purple" sub={`${stats?.newQuestions ?? 0} noi`} />
-        <StatCard icon="📅" label="Ședințe" value={stats?.totalMeetings ?? '–'} color="orange" sub={`${stats?.upcomingMeetings ?? 0} viitoare`} />
-        <StatCard icon="💳" label="Abonamente active" value={stats?.totalSubscriptions ?? '–'} color="teal" />
+        <StatCard icon={FiUsers} label="Utilizatori" value={stats?.totalUsers ?? '–'} color="blue" />
+        <StatCard icon={FiFileText} label="Jurnale" value={stats?.totalEntries ?? '–'} color="green" />
+        <StatCard icon={FiHelpCircle} label="Întrebări" value={stats?.totalQuestions ?? '–'} color="purple" sub={`${stats?.newQuestions ?? 0} noi`} />
+        <StatCard icon={FiCalendar} label="Ședințe" value={stats?.totalMeetings ?? '–'} color="orange" sub={`${stats?.upcomingMeetings ?? 0} viitoare`} />
+        <StatCard icon={FiCreditCard} label="Abonamente active" value={stats?.totalSubscriptions ?? '–'} color="teal" />
       </div>
     </div>
   );
 }
 
 function StatCard({ icon, label, value, color, sub }) {
+  const Icon = icon;
   return (
     <div className={`stat-card stat-card--${color}`}>
-      <div className="stat-card__icon">{icon}</div>
+      <div className="stat-card__icon"><Icon /></div>
       <div className="stat-card__body">
         <div className="stat-card__value">{value}</div>
         <div className="stat-card__label">{label}</div>

@@ -1,15 +1,20 @@
 import { useEffect, useState, useCallback } from 'react';
+import { FiCalendar, FiChevronLeft, FiChevronRight, FiClock, FiEdit2, FiTrash2, FiUser } from 'react-icons/fi';
 import { adminApi } from '../api';
 
 export default function MeetingsPage() {
   const [meetings, setMeetings] = useState([]);
+  const [calendarMeetings, setCalendarMeetings] = useState([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [showUpcoming, setShowUpcoming] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [calendarLoading, setCalendarLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState(null);
   const [users, setUsers] = useState([]);
+  const [monthCursor, setMonthCursor] = useState(startOfMonth(new Date()));
+  const [selectedDate, setSelectedDate] = useState(toIsoDate(new Date()));
 
   // Form state
   const [form, setForm] = useState({ user_id: '', title: 'Ședință', notes: '', scheduled_at: '', duration_min: 60 });
@@ -17,14 +22,33 @@ export default function MeetingsPage() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await adminApi.meetings(page, showUpcoming);
+      const res = await adminApi.meetings({ page, upcoming: showUpcoming, limit: 50 });
       setMeetings(res.items || []);
       setTotal(res.total || 0);
     } catch {}
     setLoading(false);
   }, [page, showUpcoming]);
 
+  const loadCalendar = useCallback(async () => {
+    setCalendarLoading(true);
+    const start = startOfMonth(monthCursor);
+    const end = endOfMonth(monthCursor);
+    try {
+      const res = await adminApi.meetings({
+        page: 1,
+        limit: 300,
+        from: start.toISOString(),
+        to: end.toISOString(),
+      });
+      setCalendarMeetings(res.items || []);
+    } catch {
+      setCalendarMeetings([]);
+    }
+    setCalendarLoading(false);
+  }, [monthCursor]);
+
   useEffect(() => { load(); }, [load]);
+  useEffect(() => { loadCalendar(); }, [loadCalendar]);
 
   // Load users for the dropdown
   useEffect(() => {
@@ -87,7 +111,7 @@ export default function MeetingsPage() {
       </div>
 
       <div className="toolbar">
-        <button className="btn btn-primary" onClick={() => { resetForm(); setShowForm(true); }}>+ Programează ședință</button>
+        <button className="btn btn-primary" onClick={() => { resetForm(); setShowForm(true); }}><FiCalendar /> Programează ședință</button>
         <label className="toggle-label">
           <input type="checkbox" checked={showUpcoming} onChange={(e) => { setShowUpcoming(e.target.checked); setPage(1); }} />
           Doar viitoare
@@ -175,8 +199,8 @@ export default function MeetingsPage() {
                         </select>
                       </td>
                       <td className="td-actions">
-                        <button className="btn btn-sm btn-ghost" onClick={() => handleEdit(m)} title="Editează">✏️</button>
-                        <button className="btn btn-sm btn-danger" onClick={() => handleDelete(m.id)} title="Șterge">🗑️</button>
+                        <button className="btn btn-sm btn-ghost" onClick={() => handleEdit(m)} title="Editează"><FiEdit2 /></button>
+                        <button className="btn btn-sm btn-danger" onClick={() => handleDelete(m.id)} title="Șterge"><FiTrash2 /></button>
                       </td>
                     </tr>
                   );
@@ -190,6 +214,64 @@ export default function MeetingsPage() {
           <Pagination page={page} totalPages={totalPages} onChange={setPage} />
         </>
       )}
+
+      <section className="calendar-panel">
+        <div className="calendar-panel__header">
+          <div>
+            <h2>Calendar întâlniri cu Dan</h2>
+            <p>Vezi rapid ce utilizatori sunt programați pe fiecare zi.</p>
+          </div>
+          <div className="calendar-nav">
+            <button className="btn btn-ghost btn-sm" onClick={() => setMonthCursor((prev) => addMonths(prev, -1))}><FiChevronLeft /></button>
+            <strong>{monthLabel(monthCursor)}</strong>
+            <button className="btn btn-ghost btn-sm" onClick={() => setMonthCursor((prev) => addMonths(prev, 1))}><FiChevronRight /></button>
+          </div>
+        </div>
+
+        {calendarLoading ? <div className="page-loading">Se încarcă calendarul...</div> : (
+          <>
+            <div className="calendar-grid">
+              {weekHeaders.map((d) => <div key={d} className="calendar-grid__weekday">{d}</div>)}
+              {buildCalendarCells(monthCursor).map((cell) => {
+                const dayKey = toIsoDate(cell.date);
+                const eventsCount = calendarMeetings.filter((m) => toIsoDate(new Date(m.scheduled_at)) === dayKey && m.status !== 'cancelled').length;
+                const isCurrentMonth = cell.date.getMonth() === monthCursor.getMonth();
+                const isSelected = dayKey === selectedDate;
+                const isToday = dayKey === toIsoDate(new Date());
+                return (
+                  <button
+                    key={dayKey}
+                    className={`calendar-day${isCurrentMonth ? '' : ' calendar-day--muted'}${isSelected ? ' calendar-day--selected' : ''}${isToday ? ' calendar-day--today' : ''}`}
+                    onClick={() => setSelectedDate(dayKey)}
+                    type="button"
+                  >
+                    <span className="calendar-day__number">{cell.date.getDate()}</span>
+                    {eventsCount > 0 ? <span className="calendar-day__events">{eventsCount}</span> : null}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="calendar-agenda">
+              <h3>Programări pentru {fmtIsoDate(selectedDate)}</h3>
+              {appointmentsForDate(calendarMeetings, selectedDate).length === 0 ? (
+                <p className="calendar-agenda__empty">Nu există programări pentru această zi.</p>
+              ) : (
+                <div className="calendar-agenda__list">
+                  {appointmentsForDate(calendarMeetings, selectedDate).map((m) => (
+                    <article key={m.id} className="agenda-item">
+                      <div className="agenda-item__time"><FiClock /> {fmtTime(m.scheduled_at)}</div>
+                      <div className="agenda-item__title">{m.title}</div>
+                      <div className="agenda-item__user"><FiUser /> {m.user_name || m.email || (m.user_id ? `Utilizator #${m.user_id}` : 'Întâlnire generală')}</div>
+                      {m.notes ? <p className="agenda-item__notes">{m.notes}</p> : null}
+                    </article>
+                  ))}
+                </div>
+              )}
+            </div>
+          </>
+        )}
+      </section>
     </div>
   );
 }
@@ -214,4 +296,68 @@ function toLocalInput(d) {
   const dt = new Date(d);
   const pad = (n) => String(n).padStart(2, '0');
   return `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}T${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
+}
+
+const weekHeaders = ['Lun', 'Mar', 'Mie', 'Joi', 'Vin', 'Sâm', 'Dum'];
+
+function appointmentsForDate(items, dayIso) {
+  return [...items]
+    .filter((m) => toIsoDate(new Date(m.scheduled_at)) === dayIso && m.status !== 'cancelled')
+    .sort((a, b) => new Date(a.scheduled_at) - new Date(b.scheduled_at));
+}
+
+function buildCalendarCells(monthDate) {
+  const monthStart = startOfMonth(monthDate);
+  const monthEnd = endOfMonth(monthDate);
+  const startWeekday = (monthStart.getDay() + 6) % 7;
+  const daysInMonth = monthEnd.getDate();
+  const cells = [];
+
+  for (let i = startWeekday; i > 0; i -= 1) {
+    cells.push({ date: addDays(monthStart, -i) });
+  }
+  for (let day = 1; day <= daysInMonth; day += 1) {
+    cells.push({ date: new Date(monthStart.getFullYear(), monthStart.getMonth(), day) });
+  }
+  while (cells.length % 7 !== 0) {
+    cells.push({ date: addDays(cells[cells.length - 1].date, 1) });
+  }
+
+  return cells;
+}
+
+function monthLabel(date) {
+  return date.toLocaleDateString('ro-RO', { month: 'long', year: 'numeric' });
+}
+
+function fmtIsoDate(dayIso) {
+  const [y, m, d] = dayIso.split('-').map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString('ro-RO', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+function fmtTime(d) {
+  return new Date(d).toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' });
+}
+
+function startOfMonth(d) {
+  return new Date(d.getFullYear(), d.getMonth(), 1);
+}
+
+function endOfMonth(d) {
+  return new Date(d.getFullYear(), d.getMonth() + 1, 1);
+}
+
+function addDays(d, days) {
+  const copy = new Date(d);
+  copy.setDate(copy.getDate() + days);
+  return copy;
+}
+
+function addMonths(d, months) {
+  return new Date(d.getFullYear(), d.getMonth() + months, 1);
+}
+
+function toIsoDate(d) {
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }

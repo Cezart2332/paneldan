@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
+import { FiCheckCircle, FiMail } from 'react-icons/fi';
 import { adminApi } from '../api';
 
 export default function QuestionsPage() {
@@ -70,8 +71,8 @@ export default function QuestionsPage() {
                 {expandedId === q.id && (
                   <div className="question-card__body">
                     <div className="question-card__full">{q.question}</div>
-                    {q.q_email && <div className="question-card__detail">📧 {q.q_email}</div>}
-                    {q.consent ? <div className="question-card__detail">✅ Consimțământ acordat</div> : null}
+                    {q.q_email && <div className="question-card__detail"><FiMail /> {q.q_email}</div>}
+                    {q.consent ? <div className="question-card__detail"><FiCheckCircle /> Consimțământ acordat</div> : null}
                     <div className="question-card__actions">
                       <label>Schimbă status:</label>
                       <select value={q.status} onChange={(e) => handleStatusChange(q.id, e.target.value)}>

@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
+import { FiTrash2 } from 'react-icons/fi';
 import { adminApi } from '../api';
 
 export default function EntriesPage() {
@@ -82,7 +83,7 @@ export default function EntriesPage() {
                     <td className="td-desc">{e.actions || '–'}</td>
                     <td className="td-date">{fmtDate(e.client_date || e.created_at)}</td>
                     <td>
-                      <button className="btn btn-danger btn-sm" onClick={() => handleDelete(e.id)} title="Șterge">🗑️</button>
+                      <button className="btn btn-danger btn-sm" onClick={() => handleDelete(e.id)} title="Șterge"><FiTrash2 /></button>
                     </td>
                   </tr>
                 ))}
