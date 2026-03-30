@@ -520,6 +520,9 @@ tbody tr:hover {
 .badge--facebook { background: rgba(47, 110, 255, 0.15); color: #1f57d4; }
 .badge--apple { background: rgba(19, 33, 60, 0.12); color: #13213c; }
 .badge--new { background: rgba(47, 110, 255, 0.16); color: #1f57d4; }
+.badge--in_progress { background: rgba(245, 159, 41, 0.18); color: #9b680f; }
+.badge--resolved { background: rgba(20, 184, 110, 0.16); color: #0f8f56; }
+.badge--closed { background: rgba(77, 98, 127, 0.14); color: #4d627f; }
 .badge--read { background: rgba(111, 103, 255, 0.16); color: #4d46d9; }
 .badge--answered { background: rgba(20, 184, 110, 0.16); color: #0f8f56; }
 .badge--archived { background: rgba(77, 98, 127, 0.14); color: #4d627f; }
@@ -903,6 +906,30 @@ tbody tr:hover {
   color: var(--text-muted);
   line-height: 1.5;
   font-size: 13px;
+}
+
+.contact-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--accent);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.contact-link:hover {
+  text-decoration: underline;
+}
+
+.bug-row-expanded td {
+  background: rgba(255, 255, 255, 0.42);
+}
+
+.bug-report-description {
+  line-height: 1.55;
+  white-space: pre-wrap;
+  color: var(--text);
 }
 
 @media (max-width: 980px) {

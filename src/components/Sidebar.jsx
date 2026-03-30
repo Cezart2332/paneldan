@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { FiBarChart2, FiCalendar, FiFileText, FiHelpCircle, FiLogOut, FiShield, FiUsers } from 'react-icons/fi';
+import { FiAlertCircle, FiBarChart2, FiCalendar, FiFileText, FiHelpCircle, FiLogOut, FiShield, FiUsers } from 'react-icons/fi';
 import { clearToken } from '../api';
 
 const links = [
@@ -7,6 +7,7 @@ const links = [
   { to: '/users', icon: FiUsers, label: 'Utilizatori' },
   { to: '/entries', icon: FiFileText, label: 'Jurnale' },
   { to: '/questions', icon: FiHelpCircle, label: 'Întrebări' },
+  { to: '/bug-reports', icon: FiAlertCircle, label: 'Bug Reports' },
   { to: '/meetings', icon: FiCalendar, label: 'Calendar' },
 ];
 
