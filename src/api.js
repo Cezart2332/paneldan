@@ -56,4 +56,5 @@ export const adminApi = {
   deleteMeeting: (id) => request(`/api/admin/meetings/${id}`, { method: 'DELETE' }),
   // Bug reports
   bugReports: (page = 1, limit = 50) => request(`/api/admin/bug-reports?page=${page}&limit=${limit}`),
+  updateBugReport: (id, status) => request(`/api/admin/bug-reports/${id}`, { method: 'PUT', body: { status } }),
 };

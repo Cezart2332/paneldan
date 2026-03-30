@@ -410,6 +410,10 @@ body {
 .stat-card--teal .stat-card__value { color: var(--teal); }
 .stat-card--teal .stat-card__sub { background: rgba(15, 168, 163, 0.14); color: var(--teal); }
 
+.stat-card--red .stat-card__icon,
+.stat-card--red .stat-card__value { color: var(--danger); }
+.stat-card--red .stat-card__sub { background: rgba(232, 77, 101, 0.14); color: #c23952; }
+
 .table-wrap,
 .form-card,
 .question-card,
@@ -541,6 +545,17 @@ tbody tr:hover {
 .badge-select--scheduled { color: var(--accent); }
 .badge-select--completed { color: var(--success); }
 .badge-select--cancelled { color: var(--danger); }
+.badge-select--new { color: #1f57d4; }
+.badge-select--in_progress { color: #9b680f; }
+.badge-select--resolved { color: #0f8f56; }
+.badge-select--closed { color: #4d627f; }
+
+.bug-status-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
 
 .level-badge--green { background: rgba(20, 184, 110, 0.14); color: #0f8f56; }
 .level-badge--orange { background: rgba(245, 159, 41, 0.15); color: #9b680f; }

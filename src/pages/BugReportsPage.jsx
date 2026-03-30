@@ -8,6 +8,8 @@ export default function BugReportsPage() {
   const [page, setPage] = useState(1);
   const [expandedId, setExpandedId] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [statusSavingId, setStatusSavingId] = useState(null);
+  const [statusError, setStatusError] = useState('');
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -29,6 +31,19 @@ export default function BugReportsPage() {
     load();
   }, [load]);
 
+  const handleStatusChange = async (id, nextStatus) => {
+    setStatusError('');
+    setStatusSavingId(id);
+    try {
+      await adminApi.updateBugReport(id, nextStatus);
+      setReports((prev) => prev.map((item) => (item.id === id ? { ...item, status: nextStatus } : item)));
+    } catch {
+      setStatusError('Nu am putut actualiza statusul bug report-ului. Incearca din nou.');
+    } finally {
+      setStatusSavingId((current) => (current === id ? null : current));
+    }
+  };
+
   const totalPages = Math.max(1, Math.ceil(total / 50));
 
   return (
@@ -42,6 +57,8 @@ export default function BugReportsPage() {
         <div className="page-loading">Se incarca...</div>
       ) : (
         <>
+          {statusError ? <div className="form-error">{statusError}</div> : null}
+
           <div className="table-wrap">
             <table>
               <thead>
@@ -63,6 +80,8 @@ export default function BugReportsPage() {
                       report={report}
                       expanded={isExpanded}
                       onToggle={() => setExpandedId(isExpanded ? null : report.id)}
+                      onStatusChange={handleStatusChange}
+                      saving={statusSavingId === report.id}
                     />
                   );
                 })}
@@ -83,7 +102,7 @@ export default function BugReportsPage() {
   );
 }
 
-function FragmentRow({ report, expanded, onToggle }) {
+function FragmentRow({ report, expanded, onToggle, onStatusChange, saving }) {
   return (
     <>
       <tr>
@@ -105,7 +124,21 @@ function FragmentRow({ report, expanded, onToggle }) {
           )}
         </td>
         <td>
-          <span className={`badge badge--${statusClass(report.status)}`}>{statusLabel(report.status)}</span>
+          <div className="bug-status-cell">
+            <span className={`badge badge--${statusClass(report.status)}`}>{statusLabel(report.status)}</span>
+            <select
+              className={`badge-select badge-select--${statusClass(report.status)}`}
+              value={report.status || 'new'}
+              onChange={(e) => onStatusChange(report.id, e.target.value)}
+              disabled={saving}
+              aria-label={`Schimba status pentru bug report ${report.id}`}
+            >
+              <option value="new">Nou</option>
+              <option value="in_progress">In lucru</option>
+              <option value="resolved">Rezolvat</option>
+              <option value="closed">Inchis</option>
+            </select>
+          </div>
         </td>
         <td>
           <button className="btn btn-ghost btn-sm" onClick={onToggle}>

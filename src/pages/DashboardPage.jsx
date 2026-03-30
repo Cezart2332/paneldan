@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { FiCalendar, FiCreditCard, FiFileText, FiHelpCircle, FiUsers } from 'react-icons/fi';
+import { FiAlertCircle, FiCalendar, FiCreditCard, FiFileText, FiHelpCircle, FiUsers } from 'react-icons/fi';
 import { adminApi } from '../api';
 
 export default function DashboardPage() {
@@ -22,6 +22,7 @@ export default function DashboardPage() {
         <StatCard icon={FiUsers} label="Utilizatori" value={stats?.totalUsers ?? '–'} color="blue" />
         <StatCard icon={FiFileText} label="Jurnale" value={stats?.totalEntries ?? '–'} color="green" />
         <StatCard icon={FiHelpCircle} label="Întrebări" value={stats?.totalQuestions ?? '–'} color="purple" sub={`${stats?.newQuestions ?? 0} noi`} />
+        <StatCard icon={FiAlertCircle} label="Bug Reports" value={stats?.totalBugReports ?? '–'} color="red" sub={`${stats?.openBugReports ?? 0} deschise`} />
         <StatCard icon={FiCalendar} label="Ședințe" value={stats?.totalMeetings ?? '–'} color="orange" sub={`${stats?.upcomingMeetings ?? 0} viitoare`} />
         <StatCard icon={FiCreditCard} label="Abonamente active" value={stats?.totalSubscriptions ?? '–'} color="teal" />
       </div>
