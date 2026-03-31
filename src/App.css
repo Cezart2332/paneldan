@@ -478,9 +478,37 @@ tbody tr:hover {
 
 .td-desc {
   max-width: 280px;
+}
+
+.td-desc__text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+}
+
+.td-desc--expanded .td-desc__text {
+  display: block;
+  overflow: visible;
+  -webkit-line-clamp: initial;
+}
+
+.td-desc__toggle {
+  margin-top: 6px;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.td-desc__toggle:hover {
+  text-decoration: underline;
 }
 
 .td-empty {

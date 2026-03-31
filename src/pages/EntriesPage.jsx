@@ -8,6 +8,7 @@ export default function EntriesPage() {
   const [page, setPage] = useState(1);
   const [userFilter, setUserFilter] = useState('');
   const [loading, setLoading] = useState(true);
+  const [expandedCells, setExpandedCells] = useState({});
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -28,6 +29,11 @@ export default function EntriesPage() {
       setEntries((prev) => prev.filter((e) => e.id !== id));
       setTotal((t) => t - 1);
     } catch {}
+  };
+
+  const toggleCell = (entryId, field) => {
+    const key = `${entryId}:${field}`;
+    setExpandedCells((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
   const totalPages = Math.max(1, Math.ceil(total / 50));
@@ -79,8 +85,20 @@ export default function EntriesPage() {
                     <td>
                       <span className={`level-badge level-badge--${levelColor(e.level)}`}>{e.level}/10</span>
                     </td>
-                    <td className="td-desc">{e.description || '–'}</td>
-                    <td className="td-desc">{e.actions || '–'}</td>
+                    <ExpandableTextCell
+                      entryId={e.id}
+                      field="description"
+                      text={e.description}
+                      expanded={Boolean(expandedCells[`${e.id}:description`])}
+                      onToggle={toggleCell}
+                    />
+                    <ExpandableTextCell
+                      entryId={e.id}
+                      field="actions"
+                      text={e.actions}
+                      expanded={Boolean(expandedCells[`${e.id}:actions`])}
+                      onToggle={toggleCell}
+                    />
                     <td className="td-date">{fmtDate(e.client_date || e.created_at)}</td>
                     <td>
                       <button className="btn btn-danger btn-sm" onClick={() => handleDelete(e.id)} title="Șterge"><FiTrash2 /></button>
@@ -97,6 +115,26 @@ export default function EntriesPage() {
         </>
       )}
     </div>
+  );
+}
+
+function ExpandableTextCell({ entryId, field, text, expanded, onToggle }) {
+  const value = text?.trim() || '–';
+  const isExpandable = value !== '–' && value.length > 120;
+
+  return (
+    <td className={`td-desc${expanded ? ' td-desc--expanded' : ''}`}>
+      <div className="td-desc__text">{value}</div>
+      {isExpandable ? (
+        <button
+          type="button"
+          className="td-desc__toggle"
+          onClick={() => onToggle(entryId, field)}
+        >
+          {expanded ? 'Ascunde' : 'Vezi tot'}
+        </button>
+      ) : null}
+    </td>
   );
 }
 
