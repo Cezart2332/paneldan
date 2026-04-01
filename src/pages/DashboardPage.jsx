@@ -1,20 +1,13 @@
 import { useEffect, useState } from 'react';
 import { FiAlertCircle, FiCalendar, FiCreditCard, FiFileText, FiHelpCircle, FiUsers } from 'react-icons/fi';
 import { adminApi } from '../api';
-import PageError from '../components/PageError';
-import { getErrorMessage } from '../utils/errors';
 
 export default function DashboardPage() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
 
   useEffect(() => {
-    adminApi
-      .stats()
-      .then(setStats)
-      .catch((err) => setError(getErrorMessage(err, 'Nu am putut incarca statisticile dashboard-ului.')))
-      .finally(() => setLoading(false));
+    adminApi.stats().then(setStats).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
   if (loading) return <div className="page-loading">Se încarcă...</div>;
@@ -25,7 +18,6 @@ export default function DashboardPage() {
         <h1>Dashboard</h1>
         <p>Sumar general al aplicației</p>
       </div>
-      <PageError message={error} />
       <div className="stats-grid">
         <StatCard icon={FiUsers} label="Utilizatori" value={stats?.totalUsers ?? '–'} color="blue" />
         <StatCard icon={FiFileText} label="Jurnale" value={stats?.totalEntries ?? '–'} color="green" />

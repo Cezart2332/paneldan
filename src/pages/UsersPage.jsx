@@ -1,9 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
 import { adminApi } from '../api';
-import Pagination from '../components/Pagination';
-import PageError from '../components/PageError';
-import { fmtDateTime } from '../utils/formatters';
-import { getErrorMessage } from '../utils/errors';
 
 export default function UsersPage() {
   const [users, setUsers] = useState([]);
@@ -11,22 +7,15 @@ export default function UsersPage() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
 
   const load = useCallback(async () => {
     setLoading(true);
-    setError('');
     try {
       const res = await adminApi.users(page, search);
       setUsers(res.items || []);
       setTotal(res.total || 0);
-    } catch (err) {
-      setUsers([]);
-      setTotal(0);
-      setError(getErrorMessage(err, 'Nu am putut incarca utilizatorii.'));
-    } finally {
-      setLoading(false);
-    }
+    } catch {}
+    setLoading(false);
   }, [page, search]);
 
   useEffect(() => { load(); }, [load]);
@@ -47,7 +36,6 @@ export default function UsersPage() {
           value={search}
           onChange={(e) => { setSearch(e.target.value); setPage(1); }}
           className="search-input"
-          aria-label="Cauta utilizator dupa email sau nume"
         />
       </div>
 
@@ -55,8 +43,6 @@ export default function UsersPage() {
         <div className="page-loading">Se încarcă...</div>
       ) : (
         <>
-          <PageError message={error} />
-
           <div className="table-wrap">
             <table>
               <thead>
@@ -75,7 +61,7 @@ export default function UsersPage() {
                     <td>{u.email || '–'}</td>
                     <td>{u.name || '–'}</td>
                     <td><span className={`badge badge--${u.provider}`}>{u.provider}</span></td>
-                    <td className="td-date">{fmtDateTime(u.created_at)}</td>
+                    <td className="td-date">{fmtDate(u.created_at)}</td>
                   </tr>
                 ))}
                 {users.length === 0 && (
@@ -89,4 +75,20 @@ export default function UsersPage() {
       )}
     </div>
   );
+}
+
+function Pagination({ page, totalPages, onChange }) {
+  if (totalPages <= 1) return null;
+  return (
+    <div className="pagination">
+      <button disabled={page <= 1} onClick={() => onChange(page - 1)}>← Înapoi</button>
+      <span>Pagina {page} / {totalPages}</span>
+      <button disabled={page >= totalPages} onClick={() => onChange(page + 1)}>Înainte →</button>
+    </div>
+  );
+}
+
+function fmtDate(d) {
+  if (!d) return '–';
+  return new Date(d).toLocaleDateString('ro-RO', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
