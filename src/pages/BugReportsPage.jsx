@@ -1,6 +1,10 @@
 import { useEffect, useState, useCallback } from 'react';
 import { FiAlertCircle, FiMail } from 'react-icons/fi';
 import { adminApi } from '../api';
+import Pagination from '../components/Pagination';
+import PageError from '../components/PageError';
+import { fmtDateTime } from '../utils/formatters';
+import { getErrorMessage } from '../utils/errors';
 
 export default function BugReportsPage() {
   const [reports, setReports] = useState([]);
@@ -10,9 +14,11 @@ export default function BugReportsPage() {
   const [loading, setLoading] = useState(true);
   const [statusSavingId, setStatusSavingId] = useState(null);
   const [statusError, setStatusError] = useState('');
+  const [error, setError] = useState('');
 
   const load = useCallback(async () => {
     setLoading(true);
+    setError('');
     try {
       const res = await adminApi.bugReports(page, 50);
       setReports(res.items || []);
@@ -20,11 +26,13 @@ export default function BugReportsPage() {
       if (expandedId && !(res.items || []).some((item) => item.id === expandedId)) {
         setExpandedId(null);
       }
-    } catch {
+    } catch (err) {
       setReports([]);
       setTotal(0);
+      setError(getErrorMessage(err, 'Nu am putut incarca bug reports.'));
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }, [page, expandedId]);
 
   useEffect(() => {
@@ -37,8 +45,8 @@ export default function BugReportsPage() {
     try {
       await adminApi.updateBugReport(id, nextStatus);
       setReports((prev) => prev.map((item) => (item.id === id ? { ...item, status: nextStatus } : item)));
-    } catch {
-      setStatusError('Nu am putut actualiza statusul bug report-ului. Incearca din nou.');
+    } catch (err) {
+      setStatusError(getErrorMessage(err, 'Nu am putut actualiza statusul bug report-ului. Incearca din nou.'));
     } finally {
       setStatusSavingId((current) => (current === id ? null : current));
     }
@@ -57,10 +65,12 @@ export default function BugReportsPage() {
         <div className="page-loading">Se incarca...</div>
       ) : (
         <>
-          {statusError ? <div className="form-error">{statusError}</div> : null}
+          <PageError message={error} />
+          <PageError message={statusError} />
 
           <div className="table-wrap">
             <table>
+              <caption className="sr-only">Lista raportari bug</caption>
               <thead>
                 <tr>
                   <th>ID</th>
@@ -141,16 +151,22 @@ function FragmentRow({ report, expanded, onToggle, onStatusChange, saving }) {
           </div>
         </td>
         <td>
-          <button className="btn btn-ghost btn-sm" onClick={onToggle}>
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm"
+            onClick={onToggle}
+            aria-expanded={expanded}
+            aria-controls={`bug-report-desc-${report.id}`}
+          >
             <FiAlertCircle /> {expanded ? 'Ascunde' : 'Vezi'}
           </button>
         </td>
-        <td className="td-date">{fmtDate(report.created_at)}</td>
+        <td className="td-date">{fmtDateTime(report.created_at)}</td>
       </tr>
       {expanded ? (
         <tr className="bug-row-expanded">
           <td colSpan="6">
-            <div className="bug-report-description">{report.description || 'Fara descriere'}</div>
+            <div id={`bug-report-desc-${report.id}`} className="bug-report-description">{report.description || 'Fara descriere'}</div>
           </td>
         </tr>
       ) : null}
@@ -174,26 +190,4 @@ function statusClass(status) {
   if (status === 'resolved') return 'resolved';
   if (status === 'closed') return 'closed';
   return 'new';
-}
-
-function Pagination({ page, totalPages, onChange }) {
-  if (totalPages <= 1) return null;
-  return (
-    <div className="pagination">
-      <button disabled={page <= 1} onClick={() => onChange(page - 1)}>← Inapoi</button>
-      <span>Pagina {page} / {totalPages}</span>
-      <button disabled={page >= totalPages} onClick={() => onChange(page + 1)}>Inainte →</button>
-    </div>
-  );
-}
-
-function fmtDate(d) {
-  if (!d) return '–';
-  return new Date(d).toLocaleDateString('ro-RO', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
 }

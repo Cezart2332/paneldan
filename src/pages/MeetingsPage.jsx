@@ -1,6 +1,10 @@
 import { useEffect, useState, useCallback } from 'react';
 import { FiCalendar, FiChevronLeft, FiChevronRight, FiClock, FiEdit2, FiTrash2, FiUser } from 'react-icons/fi';
 import { adminApi } from '../api';
+import Pagination from '../components/Pagination';
+import PageError from '../components/PageError';
+import { fmtDateTime } from '../utils/formatters';
+import { getErrorMessage } from '../utils/errors';
 
 export default function MeetingsPage() {
   const [meetings, setMeetings] = useState([]);
@@ -15,22 +19,32 @@ export default function MeetingsPage() {
   const [users, setUsers] = useState([]);
   const [monthCursor, setMonthCursor] = useState(startOfMonth(new Date()));
   const [selectedDate, setSelectedDate] = useState(toIsoDate(new Date()));
+  const [error, setError] = useState('');
+  const [formError, setFormError] = useState('');
+  const [calendarError, setCalendarError] = useState('');
 
   // Form state
   const [form, setForm] = useState({ user_id: '', title: 'Ședință', notes: '', scheduled_at: '', duration_min: 60 });
 
   const load = useCallback(async () => {
     setLoading(true);
+    setError('');
     try {
       const res = await adminApi.meetings({ page, upcoming: showUpcoming, limit: 50 });
       setMeetings(res.items || []);
       setTotal(res.total || 0);
-    } catch {}
-    setLoading(false);
+    } catch (err) {
+      setMeetings([]);
+      setTotal(0);
+      setError(getErrorMessage(err, 'Nu am putut incarca sedintele.'));
+    } finally {
+      setLoading(false);
+    }
   }, [page, showUpcoming]);
 
   const loadCalendar = useCallback(async () => {
     setCalendarLoading(true);
+    setCalendarError('');
     const start = startOfMonth(monthCursor);
     const end = endOfMonth(monthCursor);
     try {
@@ -41,10 +55,12 @@ export default function MeetingsPage() {
         to: end.toISOString(),
       });
       setCalendarMeetings(res.items || []);
-    } catch {
+    } catch (err) {
       setCalendarMeetings([]);
+      setCalendarError(getErrorMessage(err, 'Nu am putut incarca datele din calendar.'));
+    } finally {
+      setCalendarLoading(false);
     }
-    setCalendarLoading(false);
   }, [monthCursor]);
 
   useEffect(() => { load(); }, [load]);
@@ -52,7 +68,10 @@ export default function MeetingsPage() {
 
   // Load users for the dropdown
   useEffect(() => {
-    adminApi.users(1, '').then((res) => setUsers(res.items || [])).catch(() => {});
+    adminApi
+      .users(1, '')
+      .then((res) => setUsers(res.items || []))
+      .catch((err) => setError(getErrorMessage(err, 'Nu am putut incarca lista de utilizatori.')));
   }, []);
 
   const resetForm = () => {
@@ -63,6 +82,7 @@ export default function MeetingsPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setFormError('');
     try {
       if (editId) {
         await adminApi.updateMeeting(editId, form);
@@ -71,7 +91,9 @@ export default function MeetingsPage() {
       }
       resetForm();
       load();
-    } catch {}
+    } catch (err) {
+      setFormError(getErrorMessage(err, 'Nu am putut salva sedinta.'));
+    }
   };
 
   const handleEdit = (m) => {
@@ -91,14 +113,18 @@ export default function MeetingsPage() {
     try {
       await adminApi.deleteMeeting(id);
       load();
-    } catch {}
+    } catch (err) {
+      setError(getErrorMessage(err, 'Nu am putut sterge sedinta.'));
+    }
   };
 
   const handleStatusChange = async (id, status) => {
     try {
       await adminApi.updateMeeting(id, { status });
       setMeetings((prev) => prev.map((m) => m.id === id ? { ...m, status } : m));
-    } catch {}
+    } catch (err) {
+      setError(getErrorMessage(err, 'Nu am putut actualiza statusul sedintei.'));
+    }
   };
 
   const totalPages = Math.max(1, Math.ceil(total / 50));
@@ -118,9 +144,12 @@ export default function MeetingsPage() {
         </label>
       </div>
 
+      <PageError message={error} />
+
       {showForm && (
         <div className="form-card">
           <h3>{editId ? 'Editează ședința' : 'Ședință nouă'}</h3>
+          <PageError message={formError} />
           <form onSubmit={handleSubmit}>
             <div className="form-row">
               <div className="form-group">
@@ -189,7 +218,7 @@ export default function MeetingsPage() {
                         </div>
                       </td>
                       <td>{m.title}</td>
-                      <td className="td-date">{fmtDate(m.scheduled_at)}</td>
+                      <td className="td-date">{fmtDateTime(m.scheduled_at)}</td>
                       <td>{m.duration_min} min</td>
                       <td>
                         <select className={`badge-select badge-select--${m.status}`} value={m.status} onChange={(e) => handleStatusChange(m.id, e.target.value)}>
@@ -230,6 +259,8 @@ export default function MeetingsPage() {
 
         {calendarLoading ? <div className="page-loading">Se încarcă calendarul...</div> : (
           <>
+            <PageError message={calendarError} />
+
             <div className="calendar-grid">
               {weekHeaders.map((d) => <div key={d} className="calendar-grid__weekday">{d}</div>)}
               {buildCalendarCells(monthCursor).map((cell) => {
@@ -274,22 +305,6 @@ export default function MeetingsPage() {
       </section>
     </div>
   );
-}
-
-function Pagination({ page, totalPages, onChange }) {
-  if (totalPages <= 1) return null;
-  return (
-    <div className="pagination">
-      <button disabled={page <= 1} onClick={() => onChange(page - 1)}>← Înapoi</button>
-      <span>Pagina {page} / {totalPages}</span>
-      <button disabled={page >= totalPages} onClick={() => onChange(page + 1)}>Înainte →</button>
-    </div>
-  );
-}
-
-function fmtDate(d) {
-  if (!d) return '–';
-  return new Date(d).toLocaleDateString('ro-RO', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
 function toLocalInput(d) {
