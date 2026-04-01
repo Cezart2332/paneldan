@@ -40,7 +40,13 @@ export const adminApi = {
   deleteProgress: (id) => request(`/api/admin/progress/${id}`, { method: 'DELETE' }),
   // Questions
   questions: (page = 1, status = '') => request(`/api/admin/questions?page=${page}&limit=50${status ? `&status=${status}` : ''}`),
-  updateQuestion: (id, status) => request(`/api/admin/questions/${id}`, { method: 'PUT', body: { status } }),
+  updateQuestion: (id, status, adminResponse) => request(`/api/admin/questions/${id}`, {
+    method: 'PUT',
+    body: {
+      ...(status !== undefined ? { status } : {}),
+      ...(adminResponse !== undefined ? { admin_response: adminResponse } : {}),
+    },
+  }),
   // Meetings
   meetings: ({ page = 1, upcoming = false, limit = 50, from = '', to = '' } = {}) => {
     const params = new URLSearchParams();

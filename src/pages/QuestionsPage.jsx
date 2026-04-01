@@ -9,6 +9,8 @@ export default function QuestionsPage() {
   const [statusFilter, setStatusFilter] = useState('');
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState(null);
+  const [replyDrafts, setReplyDrafts] = useState({});
+  const [savingReplyId, setSavingReplyId] = useState(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -24,9 +26,36 @@ export default function QuestionsPage() {
 
   const handleStatusChange = async (id, newStatus) => {
     try {
-      await adminApi.updateQuestion(id, newStatus);
+      await adminApi.updateQuestion(id, newStatus, undefined);
       setQuestions((prev) => prev.map((q) => q.id === id ? { ...q, status: newStatus } : q));
     } catch {}
+  };
+
+  const handleReplyChange = (id, value) => {
+    setReplyDrafts((prev) => ({ ...prev, [id]: value }));
+  };
+
+  const handleReplySave = async (questionItem) => {
+    const rawReply = replyDrafts[questionItem.id] ?? questionItem.admin_response ?? '';
+    const replyText = String(rawReply || '').trim();
+    if (!replyText) return;
+
+    setSavingReplyId(questionItem.id);
+    try {
+      await adminApi.updateQuestion(questionItem.id, 'answered', replyText);
+      const respondedAt = new Date().toISOString();
+      setQuestions((prev) => prev.map((q) => {
+        if (q.id !== questionItem.id) return q;
+        return {
+          ...q,
+          status: 'answered',
+          admin_response: replyText,
+          responded_at: respondedAt,
+        };
+      }));
+      setReplyDrafts((prev) => ({ ...prev, [questionItem.id]: replyText }));
+    } catch {}
+    setSavingReplyId(null);
   };
 
   const totalPages = Math.max(1, Math.ceil(total / 50));
@@ -73,6 +102,15 @@ export default function QuestionsPage() {
                     <div className="question-card__full">{q.question}</div>
                     {q.q_email && <div className="question-card__detail"><FiMail /> {q.q_email}</div>}
                     {q.consent ? <div className="question-card__detail"><FiCheckCircle /> Consimțământ acordat</div> : null}
+                    {q.admin_response ? (
+                      <div className="question-card__response">
+                        <div className="question-card__response-label">
+                          Răspuns trimis{q.responded_at ? ` · ${fmtDate(q.responded_at)}` : ''}
+                        </div>
+                        <div className="question-card__response-text">{q.admin_response}</div>
+                      </div>
+                    ) : null}
+
                     <div className="question-card__actions">
                       <label>Schimbă status:</label>
                       <select value={q.status} onChange={(e) => handleStatusChange(q.id, e.target.value)}>
@@ -81,6 +119,25 @@ export default function QuestionsPage() {
                         <option value="answered">Răspuns</option>
                         <option value="archived">Arhivat</option>
                       </select>
+                    </div>
+
+                    <div className="question-card__reply">
+                      <label htmlFor={`reply-${q.id}`}>Răspuns către utilizator</label>
+                      <textarea
+                        id={`reply-${q.id}`}
+                        value={replyDrafts[q.id] ?? q.admin_response ?? ''}
+                        onChange={(e) => handleReplyChange(q.id, e.target.value)}
+                        placeholder="Scrie răspunsul lui Dan aici..."
+                        rows={4}
+                      />
+                      <button
+                        className="btn btn-primary btn-sm"
+                        type="button"
+                        onClick={() => handleReplySave(q)}
+                        disabled={savingReplyId === q.id || !(replyDrafts[q.id] ?? q.admin_response ?? '').trim()}
+                      >
+                        {savingReplyId === q.id ? 'Se salvează...' : 'Trimite răspunsul'}
+                      </button>
                     </div>
                   </div>
                 )}
