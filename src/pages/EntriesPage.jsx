@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { FiTrash2 } from 'react-icons/fi';
 import { adminApi } from '../api';
 
@@ -65,6 +65,7 @@ export default function EntriesPage() {
                 <tr>
                   <th>ID</th>
                   <th>Utilizator</th>
+                  <th>Abonament</th>
                   <th>Nivel</th>
                   <th>Descriere</th>
                   <th>Acțiuni efectuate</th>
@@ -81,6 +82,11 @@ export default function EntriesPage() {
                         <span className="td-user__name">{e.user_name || '–'}</span>
                         <span className="td-user__email">{e.email || `#${e.user_id}`}</span>
                       </div>
+                    </td>
+                    <td>
+                      <span className={`badge badge--sub-${normalizeSubscriptionType(e.subscription_type)}`}>
+                        {normalizeSubscriptionType(e.subscription_type)}
+                      </span>
                     </td>
                     <td>
                       <span className={`level-badge level-badge--${levelColor(e.level)}`}>{e.level}/10</span>
@@ -106,7 +112,7 @@ export default function EntriesPage() {
                   </tr>
                 ))}
                 {entries.length === 0 && (
-                  <tr><td colSpan="7" className="td-empty">Nu există intrări de progres.</td></tr>
+                  <tr><td colSpan="8" className="td-empty">Nu există intrări de progres.</td></tr>
                 )}
               </tbody>
             </table>
@@ -119,12 +125,38 @@ export default function EntriesPage() {
 }
 
 function ExpandableTextCell({ entryId, field, text, expanded, onToggle }) {
+  const textRef = useRef(null);
+  const [isExpandable, setIsExpandable] = useState(false);
   const value = text?.trim() || '–';
-  const isExpandable = value !== '–' && value.length > 120;
+
+  useEffect(() => {
+    if (expanded) return;
+
+    const id = window.requestAnimationFrame(() => {
+      const el = textRef.current;
+      if (!el) return;
+      setIsExpandable(el.scrollHeight > el.clientHeight + 1);
+    });
+
+    return () => window.cancelAnimationFrame(id);
+  }, [value, expanded]);
+
+  useEffect(() => {
+    if (expanded) return;
+
+    const onResize = () => {
+      const el = textRef.current;
+      if (!el) return;
+      setIsExpandable(el.scrollHeight > el.clientHeight + 1);
+    };
+
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, [expanded]);
 
   return (
     <td className={`td-desc${expanded ? ' td-desc--expanded' : ''}`}>
-      <div className="td-desc__text">{value}</div>
+      <div ref={textRef} className="td-desc__text">{value}</div>
       {isExpandable ? (
         <button
           type="button"
@@ -142,6 +174,13 @@ function levelColor(level) {
   if (level <= 3) return 'green';
   if (level <= 6) return 'orange';
   return 'red';
+}
+
+function normalizeSubscriptionType(type) {
+  const value = String(type || '').toLowerCase();
+  if (value === 'pro') return 'premium';
+  if (value === 'trial' || value === 'basic' || value === 'premium' || value === 'vip') return value;
+  return 'none';
 }
 
 function Pagination({ page, totalPages, onChange }) {

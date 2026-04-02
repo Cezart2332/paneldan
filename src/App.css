@@ -558,6 +558,11 @@ tbody tr:hover {
 .badge--read { background: rgba(111, 103, 255, 0.16); color: #4d46d9; }
 .badge--answered { background: rgba(20, 184, 110, 0.16); color: #0f8f56; }
 .badge--archived { background: rgba(77, 98, 127, 0.14); color: #4d627f; }
+.badge--sub-none { background: rgba(77, 98, 127, 0.14); color: #4d627f; }
+.badge--sub-trial { background: rgba(25, 184, 255, 0.16); color: #0a84ae; }
+.badge--sub-basic { background: rgba(47, 110, 255, 0.15); color: #1f57d4; }
+.badge--sub-premium { background: rgba(111, 103, 255, 0.16); color: #4d46d9; }
+.badge--sub-vip { background: rgba(245, 159, 41, 0.18); color: #9b680f; }
 
 .badge-select {
   padding: 6px 8px;
