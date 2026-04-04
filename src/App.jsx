@@ -7,6 +7,7 @@ import UsersPage from './pages/UsersPage';
 import QuestionsPage from './pages/QuestionsPage';
 import EntriesPage from './pages/EntriesPage';
 import MeetingsPage from './pages/MeetingsPage';
+import WebinarsPage from './pages/WebinarsPage';
 import BugReportsPage from './pages/BugReportsPage';
 import Sidebar from './components/Sidebar';
 import './App.css';
@@ -27,6 +28,7 @@ function App() {
             <Route path="/entries" element={<EntriesPage />} />
             <Route path="/questions" element={<QuestionsPage />} />
             <Route path="/meetings" element={<MeetingsPage />} />
+            <Route path="/webinars" element={<WebinarsPage />} />
             <Route path="/bug-reports" element={<BugReportsPage />} />
           </Routes>
         </main>

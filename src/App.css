@@ -576,6 +576,8 @@ tbody tr:hover {
 }
 
 .badge-select--scheduled { color: var(--accent); }
+.badge-select--live { color: var(--danger); }
+.badge-select--held { color: var(--success); }
 .badge-select--completed { color: var(--success); }
 .badge-select--cancelled { color: var(--danger); }
 .badge-select--new { color: #1f57d4; }

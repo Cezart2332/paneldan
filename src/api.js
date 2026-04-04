@@ -60,6 +60,18 @@ export const adminApi = {
   createMeeting: (data) => request('/api/admin/meetings', { method: 'POST', body: data }),
   updateMeeting: (id, data) => request(`/api/admin/meetings/${id}`, { method: 'PUT', body: data }),
   deleteMeeting: (id) => request(`/api/admin/meetings/${id}`, { method: 'DELETE' }),
+  // Webinars
+  webinars: ({ page = 1, status = '', upcoming = false, limit = 50 } = {}) => {
+    const params = new URLSearchParams();
+    params.set('page', String(page));
+    params.set('limit', String(limit));
+    if (status) params.set('status', status);
+    if (upcoming) params.set('upcoming', '1');
+    return request(`/api/admin/webinars?${params.toString()}`);
+  },
+  createWebinar: (data) => request('/api/admin/webinars', { method: 'POST', body: data }),
+  updateWebinar: (id, data) => request(`/api/admin/webinars/${id}`, { method: 'PUT', body: data }),
+  deleteWebinar: (id) => request(`/api/admin/webinars/${id}`, { method: 'DELETE' }),
   // Bug reports
   bugReports: (page = 1, limit = 50) => request(`/api/admin/bug-reports?page=${page}&limit=${limit}`),
   updateBugReport: (id, status) => request(`/api/admin/bug-reports/${id}`, { method: 'PUT', body: { status } }),
