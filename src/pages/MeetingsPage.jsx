@@ -32,7 +32,7 @@ export default function MeetingsPage() {
   const loadCalendar = useCallback(async () => {
     setCalendarLoading(true);
     const start = startOfMonth(monthCursor);
-    const end = endOfMonth(monthCursor);
+    const end = startOfNextMonth(monthCursor);
     try {
       const res = await adminApi.meetings({
         page: 1,
@@ -70,7 +70,7 @@ export default function MeetingsPage() {
         await adminApi.createMeeting(form);
       }
       resetForm();
-      load();
+      await Promise.all([load(), loadCalendar()]);
     } catch {}
   };
 
@@ -90,7 +90,7 @@ export default function MeetingsPage() {
     if (!confirm('Sigur vrei să ștergi această ședință?')) return;
     try {
       await adminApi.deleteMeeting(id);
-      load();
+      await Promise.all([load(), loadCalendar()]);
     } catch {}
   };
 
@@ -98,6 +98,7 @@ export default function MeetingsPage() {
     try {
       await adminApi.updateMeeting(id, { status });
       setMeetings((prev) => prev.map((m) => m.id === id ? { ...m, status } : m));
+      setCalendarMeetings((prev) => prev.map((m) => m.id === id ? { ...m, status } : m));
     } catch {}
   };
 
@@ -344,6 +345,10 @@ function startOfMonth(d) {
 }
 
 function endOfMonth(d) {
+  return new Date(d.getFullYear(), d.getMonth() + 1, 0);
+}
+
+function startOfNextMonth(d) {
   return new Date(d.getFullYear(), d.getMonth() + 1, 1);
 }
 
