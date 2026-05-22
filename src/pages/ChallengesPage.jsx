@@ -6,10 +6,11 @@ export default function ChallengesPage() {
   const [challenges, setChallenges] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [activeLevelId, setActiveLevelId] = useState(null);
 
   const [levelModal, setLevelModal] = useState(null);
   const [challengeModal, setChallengeModal] = useState(null);
-  const [expandedLevels, setExpandedLevels] = useState(new Set());
+  const [deletingId, setDeletingId] = useState(null);
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
@@ -19,42 +20,42 @@ export default function ChallengesPage() {
         adminApi.challengeLevels(),
         adminApi.challenges(),
       ]);
-      setLevels(lvlRes.items || []);
+      const lvls = lvlRes.items || [];
+      setLevels(lvls);
       setChallenges(chRes.items || []);
+      if (!activeLevelId && lvls.length > 0) {
+        setActiveLevelId(lvls[0].id);
+      }
     } catch (e) {
       setError(e.message || 'Eroare la incarcarea datelor');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [activeLevelId]);
 
-  useEffect(() => { fetchAll(); }, [fetchAll]);
+  useEffect(() => { fetchAll(); }, []);
 
-  const toggleLevel = (id) => {
-    setExpandedLevels((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
-      return next;
-    });
-  };
+  const activeLevel = levels.find((l) => l.id === activeLevelId);
+  const levelChallenges = challenges.filter((c) => c.level_id === activeLevelId);
 
   const handleSaveLevel = async (e) => {
     e.preventDefault();
     const form = e.target;
     const data = {
-      title: form.title.value,
-      goal: form.goal.value || null,
-      color: form.color.value || '#5cb85c',
-      gradient_colors: form.gradient_colors.value || '#5cb85c,#4cae4c',
-      difficulty: form.difficulty.value || 'Ușor',
-      duration: form.duration.value || '5-10 min',
+      title: form.title.value.trim(),
+      goal: form.goal.value.trim() || null,
+      color: form.color.value.trim() || '#5cb85c',
+      gradient_colors: form.gradient_colors.value.trim() || '#5cb85c,#4cae4c',
+      difficulty: form.difficulty.value.trim() || 'Ușor',
+      duration: form.duration.value.trim() || '5-10 min',
       sort_order: Number(form.sort_order.value) || 0,
     };
     try {
       if (levelModal.id) {
         await adminApi.updateChallengeLevel(levelModal.id, data);
       } else {
-        await adminApi.createChallengeLevel(data);
+        const res = await adminApi.createChallengeLevel(data);
+        setActiveLevelId(res.id);
       }
       setLevelModal(null);
       fetchAll();
@@ -68,8 +69,8 @@ export default function ChallengesPage() {
     const form = e.target;
     const data = {
       level_id: Number(form.level_id.value),
-      title: form.title.value,
-      est: form.est.value || '5 min',
+      title: form.title.value.trim(),
+      est: form.est.value.trim() || '5 min',
       sort_order: Number(form.sort_order.value) || 0,
     };
     try {
@@ -89,6 +90,7 @@ export default function ChallengesPage() {
     if (!confirm('Stergi acest nivel? Toate provocarile asociate vor fi sterse.')) return;
     try {
       await adminApi.deleteChallengeLevel(id);
+      if (activeLevelId === id) setActiveLevelId(null);
       fetchAll();
     } catch (err) {
       alert(err.message);
@@ -97,11 +99,14 @@ export default function ChallengesPage() {
 
   const handleDeleteChallenge = async (id) => {
     if (!confirm('Stergi aceasta provocare?')) return;
+    setDeletingId(id);
     try {
       await adminApi.deleteChallenge(id);
       fetchAll();
     } catch (err) {
       alert(err.message);
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -112,50 +117,118 @@ export default function ChallengesPage() {
     <div className="page">
       <div className="page-header">
         <h1>Provocari</h1>
-        <button className="btn btn-primary" onClick={() => setLevelModal({ title: '', goal: '', color: '#5cb85c', gradient_colors: '#5cb85c,#4cae4c', difficulty: 'Ușor', duration: '5-10 min', sort_order: 0 })}>
+        <p>Gestioneaza nivelele si provocarile din aplicatie</p>
+      </div>
+
+      {/* Level Tabs */}
+      <div className="section-tabs">
+        {levels.map((lvl) => (
+          <button
+            key={lvl.id}
+            className={`section-tab ${activeLevelId === lvl.id ? 'section-tab--active' : ''}`}
+            onClick={() => setActiveLevelId(lvl.id)}
+            style={activeLevelId === lvl.id ? { borderColor: lvl.color || '#5cb85c' } : {}}
+          >
+            <span className="level-tab__dot" style={{ backgroundColor: lvl.color || '#5cb85c' }} />
+            {lvl.title}
+          </button>
+        ))}
+        <button
+          className="section-tab section-tab--add"
+          onClick={() => setLevelModal({ title: '', goal: '', color: '#5cb85c', gradient_colors: '#5cb85c,#4cae4c', difficulty: 'Ușor', duration: '5-10 min', sort_order: 0 })}
+        >
           + Nivel nou
         </button>
       </div>
 
-      <div className="tree">
-        {levels.map((lvl) => (
-          <div key={lvl.id} className="tree-section">
-            <div className="tree-row tree-row--section">
-              <button className="tree-toggle" onClick={() => toggleLevel(lvl.id)}>
-                {expandedLevels.has(lvl.id) ? '▼' : '▶'}
-              </button>
-              <span className="tree-label tree-label--bold">{lvl.title}</span>
-              <span className="tree-meta">{lvl.difficulty} · {lvl.duration}</span>
-              <div className="tree-actions">
-                <button className="btn btn-sm" onClick={() => setChallengeModal({ level_id: lvl.id, title: '', est: '5 min', sort_order: 0 })}>
-                  + Provocare
-                </button>
-                <button className="btn btn-sm" onClick={() => setLevelModal(lvl)}>Editeaza</button>
-                <button className="btn btn-sm btn-danger" onClick={() => handleDeleteLevel(lvl.id)}>Sterge</button>
+      {/* Active Level Content */}
+      {activeLevel && (
+        <div className="section-detail">
+          <div className="section-detail__header">
+            <div className="level-header__main">
+              <span className="level-color-bar" style={{ backgroundColor: activeLevel.color || '#5cb85c' }} />
+              <div>
+                <h2>{activeLevel.title}</h2>
+                <div className="level-meta">
+                  <span className="badge" style={{ backgroundColor: (activeLevel.color || '#5cb85c') + '22', color: activeLevel.color || '#5cb85c' }}>
+                    {activeLevel.difficulty}
+                  </span>
+                  <span className="level-meta__item">{activeLevel.duration}</span>
+                </div>
               </div>
             </div>
-
-            {expandedLevels.has(lvl.id) && (
-              <div className="tree-children">
-                {challenges.filter((c) => c.level_id === lvl.id).map((ch) => (
-                  <div key={ch.id} className="tree-row tree-row--video">
-                    <span className="tree-label">{ch.title}</span>
-                    <span className="tree-meta">{ch.est}</span>
-                    <div className="tree-actions">
-                      <button className="btn btn-sm" onClick={() => setChallengeModal(ch)}>Editeaza</button>
-                      <button className="btn btn-sm btn-danger" onClick={() => handleDeleteChallenge(ch.id)}>Sterge</button>
-                    </div>
-                  </div>
-                ))}
-                {challenges.filter((c) => c.level_id === lvl.id).length === 0 && (
-                  <div className="tree-empty">Nicio provocare</div>
-                )}
-              </div>
-            )}
+            <div className="section-detail__actions">
+              <button className="btn btn-ghost btn-sm" onClick={() => setLevelModal(activeLevel)}>
+                Editeaza nivelul
+              </button>
+              <button className="btn btn-danger btn-sm" onClick={() => handleDeleteLevel(activeLevel.id)}>
+                Sterge nivelul
+              </button>
+            </div>
           </div>
-        ))}
-        {levels.length === 0 && <div className="tree-empty">Niciun nivel</div>}
-      </div>
+
+          {activeLevel.goal && (
+            <p className="section-detail__desc">{activeLevel.goal}</p>
+          )}
+
+          {/* Challenges List */}
+          <div className="subsections-header">
+            <h3>Provocari ({levelChallenges.length})</h3>
+            <button
+              className="btn btn-primary btn-sm"
+              onClick={() => setChallengeModal({ level_id: activeLevel.id, title: '', est: '5 min', sort_order: 0 })}
+            >
+              + Adauga provocare
+            </button>
+          </div>
+
+          {levelChallenges.length === 0 && (
+            <div className="cms-empty">
+              <p>Nicio provocare inca.</p>
+              <button
+                className="btn btn-primary"
+                onClick={() => setChallengeModal({ level_id: activeLevel.id, title: '', est: '5 min', sort_order: 0 })}
+              >
+                Creaza prima provocare
+              </button>
+            </div>
+          )}
+
+          <div className="challenges-list">
+            {levelChallenges.map((ch, index) => (
+              <div key={ch.id} className="challenge-row">
+                <span className="challenge-row__number">{index + 1}</span>
+                <span className="challenge-row__title">{ch.title}</span>
+                <span className="challenge-row__est">{ch.est}</span>
+                <div className="challenge-row__actions">
+                  <button className="btn btn-ghost btn-sm" onClick={() => setChallengeModal(ch)}>
+                    Editeaza
+                  </button>
+                  <button
+                    className="btn btn-danger btn-sm"
+                    onClick={() => handleDeleteChallenge(ch.id)}
+                    disabled={deletingId === ch.id}
+                  >
+                    {deletingId === ch.id ? '...' : 'Sterge'}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {levels.length === 0 && !activeLevel && (
+        <div className="cms-empty cms-empty--big">
+          <p>Niciun nivel creat inca.</p>
+          <button
+            className="btn btn-primary"
+            onClick={() => setLevelModal({ title: '', goal: '', color: '#5cb85c', gradient_colors: '#5cb85c,#4cae4c', difficulty: 'Ușor', duration: '5-10 min', sort_order: 0 })}
+          >
+            Creaza primul nivel
+          </button>
+        </div>
+      )}
 
       {/* Level Modal */}
       {levelModal && (
@@ -164,36 +237,40 @@ export default function ChallengesPage() {
             <h3>{levelModal.id ? 'Editeaza nivelul' : 'Nivel nou'}</h3>
             <form onSubmit={handleSaveLevel}>
               <div className="form-group">
-                <label>Titlu</label>
-                <input name="title" defaultValue={levelModal.title} required />
+                <label>Titlu *</label>
+                <input name="title" defaultValue={levelModal.title} required placeholder="Ex: Nivel 4" />
               </div>
               <div className="form-group">
                 <label>Scop</label>
-                <textarea name="goal" defaultValue={levelModal.goal || ''} rows={3} />
+                <textarea name="goal" defaultValue={levelModal.goal || ''} rows={3} placeholder="Ex: Infruntarea situatiilor cele mai temute" />
               </div>
-              <div className="form-group">
-                <label>Culoare</label>
-                <input name="color" defaultValue={levelModal.color || '#5cb85c'} />
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Culoare *</label>
+                  <input name="color" defaultValue={levelModal.color || '#5cb85c'} required placeholder="#5cb85c" />
+                </div>
+                <div className="form-group">
+                  <label>Gradient colors</label>
+                  <input name="gradient_colors" defaultValue={levelModal.gradient_colors || '#5cb85c,#4cae4c'} placeholder="#5cb85c,#4cae4c" />
+                </div>
               </div>
-              <div className="form-group">
-                <label>Gradient colors</label>
-                <input name="gradient_colors" defaultValue={levelModal.gradient_colors || '#5cb85c,#4cae4c'} />
-              </div>
-              <div className="form-group">
-                <label>Dificultate</label>
-                <input name="difficulty" defaultValue={levelModal.difficulty || 'Ușor'} />
-              </div>
-              <div className="form-group">
-                <label>Durata</label>
-                <input name="duration" defaultValue={levelModal.duration || '5-10 min'} />
-              </div>
-              <div className="form-group">
-                <label>Ordine</label>
-                <input name="sort_order" type="number" defaultValue={levelModal.sort_order || 0} />
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Dificultate</label>
+                  <input name="difficulty" defaultValue={levelModal.difficulty || 'Ușor'} placeholder="Ușor" />
+                </div>
+                <div className="form-group">
+                  <label>Durata</label>
+                  <input name="duration" defaultValue={levelModal.duration || '5-10 min'} placeholder="5-10 min" />
+                </div>
+                <div className="form-group">
+                  <label>Ordine</label>
+                  <input name="sort_order" type="number" defaultValue={levelModal.sort_order || 0} />
+                </div>
               </div>
               <div className="modal-actions">
                 <button type="submit" className="btn btn-primary">Salveaza</button>
-                <button type="button" className="btn" onClick={() => setLevelModal(null)}>Anuleaza</button>
+                <button type="button" className="btn btn-ghost" onClick={() => setLevelModal(null)}>Anuleaza</button>
               </div>
             </form>
           </div>
@@ -208,20 +285,22 @@ export default function ChallengesPage() {
             <form onSubmit={handleSaveChallenge}>
               <input type="hidden" name="level_id" value={challengeModal.level_id} />
               <div className="form-group">
-                <label>Titlu</label>
-                <input name="title" defaultValue={challengeModal.title} required />
+                <label>Titlu *</label>
+                <input name="title" defaultValue={challengeModal.title} required placeholder="Ex: Mergi 10 minute pe jos" />
               </div>
-              <div className="form-group">
-                <label>Durata estimata</label>
-                <input name="est" defaultValue={challengeModal.est || '5 min'} />
-              </div>
-              <div className="form-group">
-                <label>Ordine</label>
-                <input name="sort_order" type="number" defaultValue={challengeModal.sort_order || 0} />
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Durata estimata</label>
+                  <input name="est" defaultValue={challengeModal.est || '5 min'} placeholder="5 min" />
+                </div>
+                <div className="form-group">
+                  <label>Ordine</label>
+                  <input name="sort_order" type="number" defaultValue={challengeModal.sort_order || 0} />
+                </div>
               </div>
               <div className="modal-actions">
                 <button type="submit" className="btn btn-primary">Salveaza</button>
-                <button type="button" className="btn" onClick={() => setChallengeModal(null)}>Anuleaza</button>
+                <button type="button" className="btn btn-ghost" onClick={() => setChallengeModal(null)}>Anuleaza</button>
               </div>
             </form>
           </div>

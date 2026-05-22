@@ -7,16 +7,14 @@ export default function VideosPage() {
   const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [activeSectionId, setActiveSectionId] = useState(null);
 
-  // Modal states
-  const [sectionModal, setSectionModal] = useState(null); // null | {id?, title, slug, description, sort_order}
-  const [subsectionModal, setSubsectionModal] = useState(null); // null | {id?, section_id, title, description, icon_name, icon_color, icon_bg, sort_order}
-  const [videoModal, setVideoModal] = useState(null); // null | {id?, subsection_id, title, description, storage_key, badge, sort_order}
+  // Modals
+  const [sectionModal, setSectionModal] = useState(null);
+  const [subsectionModal, setSubsectionModal] = useState(null);
+  const [videoModal, setVideoModal] = useState(null);
   const [uploadingId, setUploadingId] = useState(null);
-
-  // Collapse state
-  const [expandedSections, setExpandedSections] = useState(new Set());
-  const [expandedSubsections, setExpandedSubsections] = useState(new Set());
+  const [deletingId, setDeletingId] = useState(null);
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
@@ -27,48 +25,43 @@ export default function VideosPage() {
         adminApi.videoSubsections(),
         adminApi.videos(),
       ]);
-      setSections(secRes.items || []);
+      const secs = secRes.items || [];
+      setSections(secs);
       setSubsections(subRes.items || []);
       setVideos(vidRes.items || []);
+      // Auto-select first section if none active
+      if (!activeSectionId && secs.length > 0) {
+        setActiveSectionId(secs[0].id);
+      }
     } catch (e) {
       setError(e.message || 'Eroare la incarcarea datelor');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [activeSectionId]);
 
-  useEffect(() => { fetchAll(); }, [fetchAll]);
+  useEffect(() => { fetchAll(); }, []);
 
-  const toggleSection = (id) => {
-    setExpandedSections((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
-      return next;
-    });
-  };
+  const activeSection = sections.find((s) => s.id === activeSectionId);
+  const sectionSubsections = subsections.filter((s) => s.section_id === activeSectionId);
 
-  const toggleSubsection = (id) => {
-    setExpandedSubsections((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
-      return next;
-    });
-  };
+  const getSubsectionVideos = (subId) => videos.filter((v) => v.subsection_id === subId);
 
   const handleSaveSection = async (e) => {
     e.preventDefault();
     const form = e.target;
     const data = {
-      title: form.title.value,
-      slug: form.slug.value,
-      description: form.description.value || null,
+      title: form.title.value.trim(),
+      slug: form.slug.value.trim(),
+      description: form.description.value.trim() || null,
       sort_order: Number(form.sort_order.value) || 0,
     };
     try {
       if (sectionModal.id) {
         await adminApi.updateVideoSection(sectionModal.id, data);
       } else {
-        await adminApi.createVideoSection(data);
+        const res = await adminApi.createVideoSection(data);
+        setActiveSectionId(res.id);
       }
       setSectionModal(null);
       fetchAll();
@@ -82,11 +75,11 @@ export default function VideosPage() {
     const form = e.target;
     const data = {
       section_id: Number(form.section_id.value),
-      title: form.title.value,
-      description: form.description.value || null,
-      icon_name: form.icon_name.value || 'play-outline',
-      icon_color: form.icon_color.value || '#4a90e2',
-      icon_bg: form.icon_bg.value || '#eaf3ff',
+      title: form.title.value.trim(),
+      description: form.description.value.trim() || null,
+      icon_name: form.icon_name.value.trim() || 'play-outline',
+      icon_color: form.icon_color.value.trim() || '#4a90e2',
+      icon_bg: form.icon_bg.value.trim() || '#eaf3ff',
       sort_order: Number(form.sort_order.value) || 0,
     };
     try {
@@ -107,10 +100,10 @@ export default function VideosPage() {
     const form = e.target;
     const data = {
       subsection_id: Number(form.subsection_id.value),
-      title: form.title.value,
-      description: form.description.value || null,
-      storage_key: form.storage_key.value,
-      badge: form.badge.value || null,
+      title: form.title.value.trim(),
+      description: form.description.value.trim() || null,
+      storage_key: form.storage_key.value.trim(),
+      badge: form.badge.value.trim() || null,
       sort_order: Number(form.sort_order.value) || 0,
     };
     try {
@@ -141,11 +134,14 @@ export default function VideosPage() {
 
   const handleDeleteVideo = async (id) => {
     if (!confirm('Stergi acest video? Fisierele asociate vor fi sterse.')) return;
+    setDeletingId(id);
     try {
       await adminApi.deleteVideo(id);
       fetchAll();
     } catch (err) {
       alert(err.message);
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -163,6 +159,7 @@ export default function VideosPage() {
     if (!confirm('Stergi aceasta sectiune? Toate subsectiunile si videoclipurile asociate vor fi sterse.')) return;
     try {
       await adminApi.deleteVideoSection(id);
+      if (activeSectionId === id) setActiveSectionId(null);
       fetchAll();
     } catch (err) {
       alert(err.message);
@@ -171,10 +168,10 @@ export default function VideosPage() {
 
   const statusBadge = (status) => {
     const map = {
-      pending: { label: 'Pending', class: 'status-pending' },
-      encoding: { label: 'Encoding...', class: 'status-encoding' },
-      done: { label: 'Done', class: 'status-done' },
-      failed: { label: 'Failed', class: 'status-failed' },
+      pending: { label: 'Asteapta fisier', class: 'badge--sub-none' },
+      encoding: { label: 'Se encodeaza...', class: 'badge--sub-trial' },
+      done: { label: 'Gata', class: 'badge--sub-premium' },
+      failed: { label: 'Eroare', class: 'badge--sub-basic' },
     };
     const s = map[status] || map.pending;
     return <span className={`badge ${s.class}`}>{s.label}</span>;
@@ -187,57 +184,123 @@ export default function VideosPage() {
     <div className="page">
       <div className="page-header">
         <h1>Videoclipuri</h1>
-        <button className="btn btn-primary" onClick={() => setSectionModal({ title: '', slug: '', description: '', sort_order: 0 })}>
+        <p>Gestioneaza sectiunile, subsectiunile si videoclipurile din aplicatie</p>
+      </div>
+
+      {/* Section Tabs */}
+      <div className="section-tabs">
+        {sections.map((sec) => (
+          <button
+            key={sec.id}
+            className={`section-tab ${activeSectionId === sec.id ? 'section-tab--active' : ''}`}
+            onClick={() => setActiveSectionId(sec.id)}
+          >
+            {sec.title}
+          </button>
+        ))}
+        <button
+          className="section-tab section-tab--add"
+          onClick={() => setSectionModal({ title: '', slug: '', description: '', sort_order: 0 })}
+        >
           + Sectiune noua
         </button>
       </div>
 
-      <div className="tree">
-        {sections.map((sec) => (
-          <div key={sec.id} className="tree-section">
-            <div className="tree-row tree-row--section">
-              <button className="tree-toggle" onClick={() => toggleSection(sec.id)}>
-                {expandedSections.has(sec.id) ? '▼' : '▶'}
-              </button>
-              <span className="tree-label tree-label--bold">{sec.title}</span>
-              <span className="tree-meta">slug: {sec.slug}</span>
-              <div className="tree-actions">
-                <button className="btn btn-sm" onClick={() => setSubsectionModal({ section_id: sec.id, title: '', description: '', icon_name: 'play-outline', icon_color: '#4a90e2', icon_bg: '#eaf3ff', sort_order: 0 })}>
-                  + Subsectiune
-                </button>
-                <button className="btn btn-sm" onClick={() => setSectionModal(sec)}>Editeaza</button>
-                <button className="btn btn-sm btn-danger" onClick={() => handleDeleteSection(sec.id)}>Sterge</button>
-              </div>
+      {/* Active Section Content */}
+      {activeSection && (
+        <div className="section-detail">
+          <div className="section-detail__header">
+            <div>
+              <h2>{activeSection.title}</h2>
+              <span className="section-slug">slug: {activeSection.slug}</span>
             </div>
+            <div className="section-detail__actions">
+              <button className="btn btn-ghost btn-sm" onClick={() => setSectionModal(activeSection)}>
+                Editeaza sectiunea
+              </button>
+              <button className="btn btn-danger btn-sm" onClick={() => handleDeleteSection(activeSection.id)}>
+                Sterge sectiunea
+              </button>
+            </div>
+          </div>
 
-            {expandedSections.has(sec.id) && (
-              <div className="tree-children">
-                {subsections.filter((s) => s.section_id === sec.id).map((sub) => (
-                  <div key={sub.id} className="tree-subsection">
-                    <div className="tree-row tree-row--subsection">
-                      <button className="tree-toggle" onClick={() => toggleSubsection(sub.id)}>
-                        {expandedSubsections.has(sub.id) ? '▼' : '▶'}
-                      </button>
-                      <span className="tree-label">{sub.title}</span>
-                      <div className="tree-actions">
-                        <button className="btn btn-sm" onClick={() => setVideoModal({ subsection_id: sub.id, title: '', description: '', storage_key: '', badge: '', sort_order: 0 })}>
-                          + Video
-                        </button>
-                        <button className="btn btn-sm" onClick={() => setSubsectionModal(sub)}>Editeaza</button>
-                        <button className="btn btn-sm btn-danger" onClick={() => handleDeleteSubsection(sub.id)}>Sterge</button>
-                      </div>
+          {activeSection.description && (
+            <p className="section-detail__desc">{activeSection.description}</p>
+          )}
+
+          {/* Subsections */}
+          <div className="subsections-header">
+            <h3>Subsectiuni</h3>
+            <button
+              className="btn btn-primary btn-sm"
+              onClick={() => setSubsectionModal({ section_id: activeSection.id, title: '', description: '', icon_name: 'play-outline', icon_color: '#4a90e2', icon_bg: '#eaf3ff', sort_order: 0 })}
+            >
+              + Adauga subsectiune
+            </button>
+          </div>
+
+          {sectionSubsections.length === 0 && (
+            <div className="cms-empty">
+              <p>Nicio subsectiune inca.</p>
+              <button
+                className="btn btn-primary"
+                onClick={() => setSubsectionModal({ section_id: activeSection.id, title: '', description: '', icon_name: 'play-outline', icon_color: '#4a90e2', icon_bg: '#eaf3ff', sort_order: 0 })}
+              >
+                Creaza prima subsectiune
+              </button>
+            </div>
+          )}
+
+          <div className="subsections-grid">
+            {sectionSubsections.map((sub) => {
+              const subVideos = getSubsectionVideos(sub.id);
+              return (
+                <div key={sub.id} className="subsection-card">
+                  <div className="subsection-card__header">
+                    <div className="subsection-card__icon-preview" style={{ backgroundColor: sub.icon_bg || '#eaf3ff' }}>
+                      <span style={{ color: sub.icon_color || '#4a90e2', fontSize: 18 }}>
+                        {/* Simple icon placeholder using unicode play */}
+                        &#9654;
+                      </span>
                     </div>
+                    <div className="subsection-card__info">
+                      <h4>{sub.title}</h4>
+                      {sub.description && <p>{sub.description}</p>}
+                    </div>
+                    <div className="subsection-card__actions">
+                      <button className="btn btn-ghost btn-sm" onClick={() => setSubsectionModal(sub)}>
+                        Editeaza
+                      </button>
+                      <button className="btn btn-danger btn-sm" onClick={() => handleDeleteSubsection(sub.id)}>
+                        Sterge
+                      </button>
+                    </div>
+                  </div>
 
-                    {expandedSubsections.has(sub.id) && (
-                      <div className="tree-children tree-children--videos">
-                        {videos.filter((v) => v.subsection_id === sub.id).map((vid) => (
-                          <div key={vid.id} className="tree-row tree-row--video">
-                            <span className="tree-label">{vid.title}</span>
-                            <span className="tree-meta">{vid.storage_key}</span>
-                            {statusBadge(vid.encoding_status)}
-                            <div className="tree-actions">
-                              <label className="btn btn-sm">
-                                {uploadingId === vid.id ? 'Se incarca...' : 'Incarca fisier'}
+                  <div className="videos-list">
+                    {subVideos.length === 0 ? (
+                      <div className="videos-list__empty">
+                        <p>Niciun video. Adauga primul video mai jos.</p>
+                      </div>
+                    ) : (
+                      <div className="videos-table">
+                        <div className="videos-table__header">
+                          <span>Video</span>
+                          <span>Status</span>
+                          <span>Actiuni</span>
+                        </div>
+                        {subVideos.map((vid) => (
+                          <div key={vid.id} className="videos-table__row">
+                            <div className="videos-table__info">
+                              <span className="videos-table__title">{vid.title}</span>
+                              <span className="videos-table__key">{vid.storage_key}</span>
+                            </div>
+                            <div className="videos-table__status">
+                              {statusBadge(vid.encoding_status)}
+                            </div>
+                            <div className="videos-table__actions">
+                              <label className={`btn btn-primary btn-sm ${uploadingId === vid.id ? 'btn--loading' : ''}`}>
+                                {uploadingId === vid.id ? 'Se incarca...' : 'Incarca'}
                                 <input
                                   type="file"
                                   accept="video/mp4,video/quicktime"
@@ -249,27 +312,46 @@ export default function VideosPage() {
                                   disabled={uploadingId === vid.id}
                                 />
                               </label>
-                              <button className="btn btn-sm" onClick={() => setVideoModal(vid)}>Editeaza</button>
-                              <button className="btn btn-sm btn-danger" onClick={() => handleDeleteVideo(vid.id)}>Sterge</button>
+                              <button className="btn btn-ghost btn-sm" onClick={() => setVideoModal(vid)}>
+                                Editeaza
+                              </button>
+                              <button
+                                className="btn btn-danger btn-sm"
+                                onClick={() => handleDeleteVideo(vid.id)}
+                                disabled={deletingId === vid.id}
+                              >
+                                {deletingId === vid.id ? '...' : 'Sterge'}
+                              </button>
                             </div>
                           </div>
                         ))}
-                        {videos.filter((v) => v.subsection_id === sub.id).length === 0 && (
-                          <div className="tree-empty">Niciun video</div>
-                        )}
                       </div>
                     )}
+                    <button
+                      className="btn btn-ghost btn-sm add-video-btn"
+                      onClick={() => setVideoModal({ subsection_id: sub.id, title: '', description: '', storage_key: '', badge: '', sort_order: 0 })}
+                    >
+                      + Adauga video
+                    </button>
                   </div>
-                ))}
-                {subsections.filter((s) => s.section_id === sec.id).length === 0 && (
-                  <div className="tree-empty">Nicio subsectiune</div>
-                )}
-              </div>
-            )}
+                </div>
+              );
+            })}
           </div>
-        ))}
-        {sections.length === 0 && <div className="tree-empty">Nicio sectiune</div>}
-      </div>
+        </div>
+      )}
+
+      {sections.length === 0 && !activeSection && (
+        <div className="cms-empty cms-empty--big">
+          <p>Nicio sectiune creata inca.</p>
+          <button
+            className="btn btn-primary"
+            onClick={() => setSectionModal({ title: '', slug: '', description: '', sort_order: 0 })}
+          >
+            Creaza prima sectiune
+          </button>
+        </div>
+      )}
 
       {/* Section Modal */}
       {sectionModal && (
@@ -278,16 +360,16 @@ export default function VideosPage() {
             <h3>{sectionModal.id ? 'Editeaza sectiunea' : 'Sectiune noua'}</h3>
             <form onSubmit={handleSaveSection}>
               <div className="form-group">
-                <label>Titlu</label>
-                <input name="title" defaultValue={sectionModal.title} required />
+                <label>Titlu *</label>
+                <input name="title" defaultValue={sectionModal.title} required placeholder="Ex: Tehnica HAI" />
               </div>
               <div className="form-group">
-                <label>Slug</label>
-                <input name="slug" defaultValue={sectionModal.slug} required />
+                <label>Slug * <small>(identificator unic, fara spatii)</small></label>
+                <input name="slug" defaultValue={sectionModal.slug} required placeholder="Ex: tehnica-hai" />
               </div>
               <div className="form-group">
                 <label>Descriere</label>
-                <textarea name="description" defaultValue={sectionModal.description || ''} rows={3} />
+                <textarea name="description" defaultValue={sectionModal.description || ''} rows={3} placeholder="Optional" />
               </div>
               <div className="form-group">
                 <label>Ordine</label>
@@ -295,7 +377,7 @@ export default function VideosPage() {
               </div>
               <div className="modal-actions">
                 <button type="submit" className="btn btn-primary">Salveaza</button>
-                <button type="button" className="btn" onClick={() => setSectionModal(null)}>Anuleaza</button>
+                <button type="button" className="btn btn-ghost" onClick={() => setSectionModal(null)}>Anuleaza</button>
               </div>
             </form>
           </div>
@@ -310,24 +392,26 @@ export default function VideosPage() {
             <form onSubmit={handleSaveSubsection}>
               <input type="hidden" name="section_id" value={subsectionModal.section_id} />
               <div className="form-group">
-                <label>Titlu</label>
-                <input name="title" defaultValue={subsectionModal.title} required />
+                <label>Titlu *</label>
+                <input name="title" defaultValue={subsectionModal.title} required placeholder="Ex: Pasii metodei" />
               </div>
               <div className="form-group">
                 <label>Descriere</label>
-                <textarea name="description" defaultValue={subsectionModal.description || ''} rows={3} />
+                <textarea name="description" defaultValue={subsectionModal.description || ''} rows={3} placeholder="Optional" />
               </div>
-              <div className="form-group">
-                <label>Icon name</label>
-                <input name="icon_name" defaultValue={subsectionModal.icon_name || 'play-outline'} />
-              </div>
-              <div className="form-group">
-                <label>Icon color</label>
-                <input name="icon_color" defaultValue={subsectionModal.icon_color || '#4a90e2'} />
-              </div>
-              <div className="form-group">
-                <label>Icon bg</label>
-                <input name="icon_bg" defaultValue={subsectionModal.icon_bg || '#eaf3ff'} />
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Icon name</label>
+                  <input name="icon_name" defaultValue={subsectionModal.icon_name || 'play-outline'} placeholder="play-outline" />
+                </div>
+                <div className="form-group">
+                  <label>Icon culoare</label>
+                  <input name="icon_color" defaultValue={subsectionModal.icon_color || '#4a90e2'} placeholder="#4a90e2" />
+                </div>
+                <div className="form-group">
+                  <label>Icon bg</label>
+                  <input name="icon_bg" defaultValue={subsectionModal.icon_bg || '#eaf3ff'} placeholder="#eaf3ff" />
+                </div>
               </div>
               <div className="form-group">
                 <label>Ordine</label>
@@ -335,7 +419,7 @@ export default function VideosPage() {
               </div>
               <div className="modal-actions">
                 <button type="submit" className="btn btn-primary">Salveaza</button>
-                <button type="button" className="btn" onClick={() => setSubsectionModal(null)}>Anuleaza</button>
+                <button type="button" className="btn btn-ghost" onClick={() => setSubsectionModal(null)}>Anuleaza</button>
               </div>
             </form>
           </div>
@@ -350,28 +434,30 @@ export default function VideosPage() {
             <form onSubmit={handleSaveVideo}>
               <input type="hidden" name="subsection_id" value={videoModal.subsection_id} />
               <div className="form-group">
-                <label>Titlu</label>
-                <input name="title" defaultValue={videoModal.title} required />
+                <label>Titlu *</label>
+                <input name="title" defaultValue={videoModal.title} required placeholder="Ex: Pasul 5 din tehnica HAI" />
               </div>
               <div className="form-group">
                 <label>Descriere</label>
-                <textarea name="description" defaultValue={videoModal.description || ''} rows={3} />
+                <textarea name="description" defaultValue={videoModal.description || ''} rows={3} placeholder="Optional" />
               </div>
               <div className="form-group">
-                <label>Storage key (nume fisier, fara extensie)</label>
-                <input name="storage_key" defaultValue={videoModal.storage_key} required />
+                <label>Storage key * <small>(nume fisier fara extensie)</small></label>
+                <input name="storage_key" defaultValue={videoModal.storage_key} required placeholder="Ex: pasul_5_tehnica_HAI" />
               </div>
-              <div className="form-group">
-                <label>Badge (optional)</label>
-                <input name="badge" defaultValue={videoModal.badge || ''} />
-              </div>
-              <div className="form-group">
-                <label>Ordine</label>
-                <input name="sort_order" type="number" defaultValue={videoModal.sort_order || 0} />
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Badge (optional)</label>
+                  <input name="badge" defaultValue={videoModal.badge || ''} placeholder="Ex: 5" />
+                </div>
+                <div className="form-group">
+                  <label>Ordine</label>
+                  <input name="sort_order" type="number" defaultValue={videoModal.sort_order || 0} />
+                </div>
               </div>
               <div className="modal-actions">
                 <button type="submit" className="btn btn-primary">Salveaza</button>
-                <button type="button" className="btn" onClick={() => setVideoModal(null)}>Anuleaza</button>
+                <button type="button" className="btn btn-ghost" onClick={() => setVideoModal(null)}>Anuleaza</button>
               </div>
             </form>
           </div>
