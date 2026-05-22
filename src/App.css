@@ -1033,6 +1033,109 @@ tbody tr:hover {
   color: var(--text);
 }
 
+/* ─── Tree / CMS pages ─── */
+.tree { display: flex; flex-direction: column; gap: 10px; }
+
+.tree-section {
+  border-radius: var(--radius-md);
+  background: var(--glass);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--border-soft);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.tree-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  min-height: 48px;
+}
+
+.tree-row--section { background: rgba(255,255,255,0.55); }
+.tree-row--subsection { padding-left: 32px; background: rgba(255,255,255,0.38); }
+.tree-row--video { padding-left: 56px; border-top: 1px solid rgba(142,170,214,0.18); }
+
+.tree-toggle {
+  width: 24px; height: 24px;
+  border-radius: 6px;
+  border: 1px solid var(--border-mid);
+  background: rgba(255,255,255,0.6);
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  display: grid; place-items: center;
+}
+
+.tree-label { font-weight: 600; font-size: 14px; }
+.tree-label--bold { font-weight: 800; font-size: 15px; }
+
+.tree-meta {
+  margin-left: auto;
+  margin-right: 12px;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.tree-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.tree-empty {
+  padding: 14px 14px 14px 56px;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* Status badges for encoding */
+.status-pending { background: rgba(77,98,127,0.14); color: #4d627f; }
+.status-encoding { background: rgba(245,159,41,0.18); color: #9b680f; }
+.status-done { background: rgba(20,184,110,0.16); color: #0f8f56; }
+.status-failed { background: rgba(232,77,101,0.16); color: #c23952; }
+
+/* ─── Modal ─── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(14,23,48,0.45);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: grid;
+  place-items: center;
+  z-index: 1000;
+  padding: 18px;
+}
+
+.modal {
+  width: min(100%, 520px);
+  border-radius: var(--radius-md);
+  background: var(--glass-strong);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border-soft);
+  box-shadow: var(--shadow-lg);
+  padding: 28px;
+}
+
+.modal h3 {
+  margin: 0 0 18px;
+  font-size: 20px;
+  letter-spacing: -0.01em;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 18px;
+}
+
 @media (max-width: 980px) {
   :root { --sidebar-w: 0px; }
 

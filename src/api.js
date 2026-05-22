@@ -75,4 +75,43 @@ export const adminApi = {
   // Bug reports
   bugReports: (page = 1, limit = 50) => request(`/api/admin/bug-reports?page=${page}&limit=${limit}`),
   updateBugReport: (id, status) => request(`/api/admin/bug-reports/${id}`, { method: 'PUT', body: { status } }),
+  // CMS Video Sections
+  videoSections: () => request('/api/admin/video-sections'),
+  createVideoSection: (data) => request('/api/admin/video-sections', { method: 'POST', body: data }),
+  updateVideoSection: (id, data) => request(`/api/admin/video-sections/${id}`, { method: 'PUT', body: data }),
+  deleteVideoSection: (id) => request(`/api/admin/video-sections/${id}`, { method: 'DELETE' }),
+  // CMS Video Subsections
+  videoSubsections: (sectionId) => request(`/api/admin/video-subsections${sectionId ? `?section_id=${sectionId}` : ''}`),
+  createVideoSubsection: (data) => request('/api/admin/video-subsections', { method: 'POST', body: data }),
+  updateVideoSubsection: (id, data) => request(`/api/admin/video-subsections/${id}`, { method: 'PUT', body: data }),
+  deleteVideoSubsection: (id) => request(`/api/admin/video-subsections/${id}`, { method: 'DELETE' }),
+  // CMS Videos
+  videos: (subsectionId) => request(`/api/admin/videos${subsectionId ? `?subsection_id=${subsectionId}` : ''}`),
+  createVideo: (data) => request('/api/admin/videos', { method: 'POST', body: data }),
+  updateVideo: (id, data) => request(`/api/admin/videos/${id}`, { method: 'PUT', body: data }),
+  deleteVideo: (id) => request(`/api/admin/videos/${id}`, { method: 'DELETE' }),
+  videoStatus: (id) => request(`/api/admin/videos/${id}/status`),
+  uploadVideo: (id, file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return fetch(`${BASE}/api/admin/videos/${id}/upload`, {
+      method: 'POST',
+      headers: { 'X-Admin-Token': getToken() },
+      body: formData,
+    }).then(async (res) => {
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error || 'Upload failed');
+      return data;
+    });
+  },
+  // CMS Challenge Levels
+  challengeLevels: () => request('/api/admin/challenge-levels'),
+  createChallengeLevel: (data) => request('/api/admin/challenge-levels', { method: 'POST', body: data }),
+  updateChallengeLevel: (id, data) => request(`/api/admin/challenge-levels/${id}`, { method: 'PUT', body: data }),
+  deleteChallengeLevel: (id) => request(`/api/admin/challenge-levels/${id}`, { method: 'DELETE' }),
+  // CMS Challenges
+  challenges: (levelId) => request(`/api/admin/challenges${levelId ? `?level_id=${levelId}` : ''}`),
+  createChallenge: (data) => request('/api/admin/challenges', { method: 'POST', body: data }),
+  updateChallenge: (id, data) => request(`/api/admin/challenges/${id}`, { method: 'PUT', body: data }),
+  deleteChallenge: (id) => request(`/api/admin/challenges/${id}`, { method: 'DELETE' }),
 };

@@ -9,6 +9,8 @@ import EntriesPage from './pages/EntriesPage';
 import MeetingsPage from './pages/MeetingsPage';
 import WebinarsPage from './pages/WebinarsPage';
 import BugReportsPage from './pages/BugReportsPage';
+import VideosPage from './pages/VideosPage';
+import ChallengesPage from './pages/ChallengesPage';
 import Sidebar from './components/Sidebar';
 import './App.css';
 
@@ -30,6 +32,8 @@ function App() {
             <Route path="/meetings" element={<MeetingsPage />} />
             <Route path="/webinars" element={<WebinarsPage />} />
             <Route path="/bug-reports" element={<BugReportsPage />} />
+            <Route path="/videos" element={<VideosPage />} />
+            <Route path="/challenges" element={<ChallengesPage />} />
           </Routes>
         </main>
       </div>
