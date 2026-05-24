@@ -11,6 +11,7 @@ import WebinarsPage from './pages/WebinarsPage';
 import BugReportsPage from './pages/BugReportsPage';
 import VideosPage from './pages/VideosPage';
 import ChallengesPage from './pages/ChallengesPage';
+import AnnouncementsPage from './pages/AnnouncementsPage';
 import Sidebar from './components/Sidebar';
 import './App.css';
 
@@ -34,6 +35,7 @@ function App() {
             <Route path="/bug-reports" element={<BugReportsPage />} />
             <Route path="/videos" element={<VideosPage />} />
             <Route path="/challenges" element={<ChallengesPage />} />
+            <Route path="/announcements" element={<AnnouncementsPage />} />
           </Routes>
         </main>
       </div>

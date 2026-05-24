@@ -114,4 +114,6 @@ export const adminApi = {
   createChallenge: (data) => request('/api/admin/challenges', { method: 'POST', body: data }),
   updateChallenge: (id, data) => request(`/api/admin/challenges/${id}`, { method: 'PUT', body: data }),
   deleteChallenge: (id) => request(`/api/admin/challenges/${id}`, { method: 'DELETE' }),
+  // Announcements
+  sendAnnouncement: (data) => request('/api/admin/announcements', { method: 'POST', body: data }),
 };
