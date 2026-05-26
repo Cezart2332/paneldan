@@ -1302,6 +1302,96 @@ tbody tr:hover {
   flex-wrap: wrap;
 }
 
+/* Icon picker */
+.icon-picker {
+  position: relative;
+}
+
+.icon-picker__trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 13px;
+  border: 1px solid var(--border-mid);
+  border-radius: var(--radius-sm);
+  background: var(--glass-strong);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.icon-picker__trigger:hover {
+  border-color: rgba(47, 110, 255, 0.45);
+}
+
+.icon-picker__trigger:focus {
+  outline: none;
+  border-color: rgba(47, 110, 255, 0.55);
+  box-shadow: 0 0 0 4px rgba(47, 110, 255, 0.14);
+}
+
+.icon-picker__trigger span {
+  flex: 1;
+  text-align: left;
+}
+
+.icon-picker__dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 100;
+  width: 340px;
+  max-height: 220px;
+  overflow-y: auto;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid var(--border-soft);
+  box-shadow: var(--shadow-lg);
+  padding: 8px;
+}
+
+.icon-picker__grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.icon-picker__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  width: 60px;
+  padding: 8px 4px 5px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--transition), border-color var(--transition), color var(--transition);
+}
+
+.icon-picker__item:hover {
+  background: rgba(47, 110, 255, 0.08);
+  color: var(--accent);
+  border-color: rgba(47, 110, 255, 0.2);
+}
+
+.icon-picker__item--active {
+  background: rgba(47, 110, 255, 0.12);
+  color: var(--accent);
+  border-color: rgba(47, 110, 255, 0.35);
+}
+
 /* Videos list inside subsection */
 .videos-list {
   padding: 12px 18px 16px;

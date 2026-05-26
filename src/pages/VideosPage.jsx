@@ -1,5 +1,89 @@
 import { useEffect, useState, useCallback } from 'react';
 import { adminApi } from '../api';
+import {
+  FiActivity,
+  FiAward,
+  FiBookOpen,
+  FiCamera,
+  FiCheckCircle,
+  FiChevronDown,
+  FiCloud,
+  FiCompass,
+  FiEye,
+  FiFilm,
+  FiGift,
+  FiGlobe,
+  FiHeadphones,
+  FiHeart,
+  FiHome,
+  FiInfo,
+  FiLifeBuoy,
+  FiMap,
+  FiMessageCircle,
+  FiMoon,
+  FiMusic,
+  FiPhone,
+  FiPlay,
+  FiPlayCircle,
+  FiSettings,
+  FiShield,
+  FiSmile,
+  FiStar,
+  FiSun,
+  FiTarget,
+  FiThumbsUp,
+  FiTrendingUp,
+  FiUser,
+  FiUsers,
+  FiVideo,
+  FiVolume2,
+  FiWind,
+  FiZap,
+} from 'react-icons/fi';
+
+const ICON_OPTIONS = [
+  { name: 'play', label: 'Play', icon: FiPlay },
+  { name: 'play-circle', label: 'Cerc play', icon: FiPlayCircle },
+  { name: 'film', label: 'Film', icon: FiFilm },
+  { name: 'video', label: 'Video', icon: FiVideo },
+  { name: 'camera', label: 'Camera', icon: FiCamera },
+  { name: 'headphones', label: 'Casti', icon: FiHeadphones },
+  { name: 'music', label: 'Muzica', icon: FiMusic },
+  { name: 'heart', label: 'Inima', icon: FiHeart },
+  { name: 'star', label: 'Stea', icon: FiStar },
+  { name: 'sun', label: 'Soare', icon: FiSun },
+  { name: 'moon', label: 'Luna', icon: FiMoon },
+  { name: 'cloud', label: 'Nor', icon: FiCloud },
+  { name: 'shield', label: 'Scut', icon: FiShield },
+  { name: 'check-circle', label: 'Bifat', icon: FiCheckCircle },
+  { name: 'activity', label: 'Activitate', icon: FiActivity },
+  { name: 'award', label: 'Premiu', icon: FiAward },
+  { name: 'book-open', label: 'Carte', icon: FiBookOpen },
+  { name: 'compass', label: 'Busola', icon: FiCompass },
+  { name: 'eye', label: 'Ochi', icon: FiEye },
+  { name: 'gift', label: 'Cadou', icon: FiGift },
+  { name: 'globe', label: 'Glob', icon: FiGlobe },
+  { name: 'home', label: 'Acasa', icon: FiHome },
+  { name: 'info', label: 'Info', icon: FiInfo },
+  { name: 'life-buoy', label: 'Colac', icon: FiLifeBuoy },
+  { name: 'map', label: 'Harta', icon: FiMap },
+  { name: 'message-circle', label: 'Mesaj', icon: FiMessageCircle },
+  { name: 'phone', label: 'Telefon', icon: FiPhone },
+  { name: 'settings', label: 'Setari', icon: FiSettings },
+  { name: 'smile', label: 'Zambet', icon: FiSmile },
+  { name: 'target', label: 'Tinta', icon: FiTarget },
+  { name: 'thumbs-up', label: 'Like', icon: FiThumbsUp },
+  { name: 'trending-up', label: 'Crestere', icon: FiTrendingUp },
+  { name: 'user', label: 'Utilizator', icon: FiUser },
+  { name: 'users', label: 'Grup', icon: FiUsers },
+  { name: 'volume-2', label: 'Volum', icon: FiVolume2 },
+  { name: 'wind', label: 'Vant', icon: FiWind },
+  { name: 'zap', label: 'Fulger', icon: FiZap },
+];
+
+function getIconForName(iconName) {
+  return ICON_OPTIONS.find((o) => o.name === iconName);
+}
 
 export default function VideosPage() {
   const [sections, setSections] = useState([]);
@@ -15,6 +99,15 @@ export default function VideosPage() {
   const [videoModal, setVideoModal] = useState(null);
   const [uploadingId, setUploadingId] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
+  const [selectedIcon, setSelectedIcon] = useState('play');
+  const [iconPickerOpen, setIconPickerOpen] = useState(false);
+
+  useEffect(() => {
+    if (subsectionModal) {
+      setSelectedIcon(subsectionModal.icon_name || 'play');
+      setIconPickerOpen(false);
+    }
+  }, [subsectionModal]);
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
@@ -77,7 +170,7 @@ export default function VideosPage() {
       section_id: Number(form.section_id.value),
       title: form.title.value.trim(),
       description: form.description.value.trim() || null,
-      icon_name: form.icon_name.value.trim() || 'play-outline',
+      icon_name: selectedIcon || 'play',
       icon_color: form.icon_color.value.trim() || '#4a90e2',
       icon_bg: form.icon_bg.value.trim() || '#eaf3ff',
       sort_order: Number(form.sort_order.value) || 0,
@@ -233,7 +326,7 @@ export default function VideosPage() {
             <h3>Subsectiuni</h3>
             <button
               className="btn btn-primary btn-sm"
-              onClick={() => setSubsectionModal({ section_id: activeSection.id, title: '', description: '', icon_name: 'play-outline', icon_color: '#4a90e2', icon_bg: '#eaf3ff', sort_order: 0 })}
+              onClick={() => setSubsectionModal({ section_id: activeSection.id, title: '', description: '', icon_name: 'play', icon_color: '#4a90e2', icon_bg: '#eaf3ff', sort_order: 0 })}
             >
               + Adauga subsectiune
             </button>
@@ -244,7 +337,7 @@ export default function VideosPage() {
               <p>Nicio subsectiune inca.</p>
               <button
                 className="btn btn-primary"
-                onClick={() => setSubsectionModal({ section_id: activeSection.id, title: '', description: '', icon_name: 'play-outline', icon_color: '#4a90e2', icon_bg: '#eaf3ff', sort_order: 0 })}
+                onClick={() => setSubsectionModal({ section_id: activeSection.id, title: '', description: '', icon_name: 'play', icon_color: '#4a90e2', icon_bg: '#eaf3ff', sort_order: 0 })}
               >
                 Creaza prima subsectiune
               </button>
@@ -258,10 +351,15 @@ export default function VideosPage() {
                 <div key={sub.id} className="subsection-card">
                   <div className="subsection-card__header">
                     <div className="subsection-card__icon-preview" style={{ backgroundColor: sub.icon_bg || '#eaf3ff' }}>
-                      <span style={{ color: sub.icon_color || '#4a90e2', fontSize: 18 }}>
-                        {/* Simple icon placeholder using unicode play */}
-                        &#9654;
-                      </span>
+                      {(() => {
+                        const iconOpt = getIconForName(sub.icon_name);
+                        const IconComp = iconOpt?.icon;
+                        return IconComp ? (
+                          <IconComp size={18} color={sub.icon_color || '#4a90e2'} />
+                        ) : (
+                          <span style={{ color: sub.icon_color || '#4a90e2', fontSize: 18 }}>&#9654;</span>
+                        );
+                      })()}
                     </div>
                     <div className="subsection-card__info">
                       <h4>{sub.title}</h4>
@@ -401,8 +499,46 @@ export default function VideosPage() {
               </div>
               <div className="form-row">
                 <div className="form-group">
-                  <label>Icon name</label>
-                  <input name="icon_name" defaultValue={subsectionModal.icon_name || 'play-outline'} placeholder="play-outline" />
+                  <label>Icon</label>
+                  <div className="icon-picker">
+                    <button
+                      type="button"
+                      className="icon-picker__trigger"
+                      onClick={() => setIconPickerOpen(!iconPickerOpen)}
+                    >
+                      {(() => {
+                        const opt = getIconForName(selectedIcon);
+                        const IconComp = opt?.icon;
+                        return IconComp ? <IconComp size={18} /> : <FiPlay size={18} />;
+                      })()}
+                      <span>{getIconForName(selectedIcon)?.label || selectedIcon}</span>
+                      <FiChevronDown size={14} />
+                    </button>
+                    {iconPickerOpen && (
+                      <div className="icon-picker__dropdown">
+                        <div className="icon-picker__grid">
+                          {ICON_OPTIONS.map((opt) => {
+                            const IconComp = opt.icon;
+                            return (
+                              <button
+                                key={opt.name}
+                                type="button"
+                                className={`icon-picker__item ${selectedIcon === opt.name ? 'icon-picker__item--active' : ''}`}
+                                onClick={() => {
+                                  setSelectedIcon(opt.name);
+                                  setIconPickerOpen(false);
+                                }}
+                                title={opt.label}
+                              >
+                                <IconComp size={18} />
+                                <span>{opt.label}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div className="form-group">
                   <label>Icon culoare</label>
