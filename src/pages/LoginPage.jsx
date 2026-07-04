@@ -11,11 +11,21 @@ export default function LoginPage({ onLogin }) {
     setError('');
     setLoading(true);
     try {
-      await adminApi.login(token.trim());
-      setToken(token.trim());
+      const trimmed = token.trim();
+      await adminApi.login(trimmed);
+      setToken(trimmed);
       onLogin();
     } catch (err) {
-      setError(err.message || 'Token invalid');
+      const msg = err.message || 'Token invalid';
+      if (msg.includes('ADMIN_TOKEN nu este configurat')) {
+        setError('Backend-ul nu are ADMIN_TOKEN setat. Adauga variabila in .env / Coolify si reporneste serverul.');
+      } else if (msg === 'Token invalid') {
+        setError(
+          'Token invalid. Verifica ca folosesti ADMIN_TOKEN de pe acelasi server la care se conecteaza panelul (local vs productie).'
+        );
+      } else {
+        setError(msg);
+      }
     } finally {
       setLoading(false);
     }
