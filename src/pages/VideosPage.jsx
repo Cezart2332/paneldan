@@ -85,6 +85,22 @@ function getIconForName(iconName) {
   return ICON_OPTIONS.find((o) => o.name === iconName);
 }
 
+// Sectiunile existente din aplicatia mobila. O sectiune CMS cu unul dintre
+// aceste slug-uri isi afiseaza videoclipurile direct in ecranul respectiv.
+const APP_SECTIONS = [
+  { slug: 'tehnica-hai', label: 'Tehnica HAI (ecranul principal)' },
+  { slug: 'tehnica-hai-psihologice', label: 'Tehnica HAI — Simptome psihologice' },
+  { slug: 'tehnica-hai-fizice', label: 'Tehnica HAI — Simptome fizice' },
+  { slug: 'audio-anxietate', label: 'Intelege anxietatea — Audio-uri despre anxietate' },
+  { slug: 'ajutor-anxietate', label: 'Ajutor — Anxietate' },
+  { slug: 'ajutor-atac-panica', label: 'Ajutor — Atac de panica' },
+  { slug: 'din-experienta-mea', label: 'Eu sunt Dan — Din experienta mea' },
+];
+
+function getAppSectionForSlug(slug) {
+  return APP_SECTIONS.find((s) => s.slug === String(slug || '').trim().toLowerCase()) || null;
+}
+
 export default function VideosPage() {
   const [sections, setSections] = useState([]);
   const [subsections, setSubsections] = useState([]);
@@ -101,6 +117,9 @@ export default function VideosPage() {
   const [deletingId, setDeletingId] = useState(null);
   const [selectedIcon, setSelectedIcon] = useState('play');
   const [iconPickerOpen, setIconPickerOpen] = useState(false);
+  // 'new' = sectiune noua pe Dashboard ("Continut nou"); 'app' = atasata unei sectiuni existente din aplicatie
+  const [sectionMode, setSectionMode] = useState('new');
+  const [appSlug, setAppSlug] = useState(APP_SECTIONS[0].slug);
 
   useEffect(() => {
     if (subsectionModal) {
@@ -108,6 +127,13 @@ export default function VideosPage() {
       setIconPickerOpen(false);
     }
   }, [subsectionModal]);
+
+  useEffect(() => {
+    if (!sectionModal) return;
+    const appSection = getAppSectionForSlug(sectionModal.slug);
+    setSectionMode(appSection ? 'app' : 'new');
+    setAppSlug(appSection ? appSection.slug : APP_SECTIONS[0].slug);
+  }, [sectionModal]);
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
@@ -143,9 +169,19 @@ export default function VideosPage() {
   const handleSaveSection = async (e) => {
     e.preventDefault();
     const form = e.target;
+    const slug = sectionMode === 'app' ? appSlug : form.slug.value.trim();
+    if (!slug) {
+      alert('Completeaza slug-ul sectiunii.');
+      return;
+    }
+    const duplicate = sections.find((s) => s.slug === slug && s.id !== sectionModal.id);
+    if (duplicate) {
+      alert(`Exista deja sectiunea "${duplicate.title}" legata de acest slug. Adauga subsectiunile si videoclipurile acolo.`);
+      return;
+    }
     const data = {
       title: form.title.value.trim(),
-      slug: form.slug.value.trim(),
+      slug,
       description: form.description.value.trim() || null,
       sort_order: Number(form.sort_order.value) || 0,
     };
@@ -306,6 +342,14 @@ export default function VideosPage() {
             <div>
               <h2>{activeSection.title}</h2>
               <span className="section-slug">slug: {activeSection.slug}</span>
+              {(() => {
+                const appSection = getAppSectionForSlug(activeSection.slug);
+                return (
+                  <span className={`badge ${appSection ? 'badge--sub-premium' : 'badge--sub-none'} section-placement-badge`}>
+                    {appSection ? `In aplicatie: ${appSection.label}` : 'Dashboard — Continut nou'}
+                  </span>
+                );
+              })()}
             </div>
             <div className="section-detail__actions">
               <button className="btn btn-ghost btn-sm" onClick={() => setSectionModal(activeSection)}>
@@ -462,9 +506,41 @@ export default function VideosPage() {
                 <input name="title" defaultValue={sectionModal.title} required placeholder="Ex: Tehnica HAI" />
               </div>
               <div className="form-group">
-                <label>Slug * <small>(identificator unic, fara spatii)</small></label>
-                <input name="slug" defaultValue={sectionModal.slug} required placeholder="Ex: tehnica-hai" />
+                <label>Unde apar videoclipurile? *</label>
+                <select
+                  value={sectionMode}
+                  onChange={(e) => setSectionMode(e.target.value)}
+                >
+                  <option value="new">Sectiune noua pe Dashboard (Continut nou)</option>
+                  <option value="app">Intr-o sectiune existenta din aplicatie</option>
+                </select>
               </div>
+              {sectionMode === 'app' ? (
+                <div className="form-group">
+                  <label>Sectiunea din aplicatie *</label>
+                  <select value={appSlug} onChange={(e) => setAppSlug(e.target.value)}>
+                    {APP_SECTIONS.map((s) => (
+                      <option key={s.slug} value={s.slug}>{s.label}</option>
+                    ))}
+                  </select>
+                  <small className="form-hint">
+                    Subsectiunile si videoclipurile adaugate aici vor aparea direct in acest ecran din aplicatie.
+                  </small>
+                </div>
+              ) : (
+                <div className="form-group">
+                  <label>Slug * <small>(identificator unic, fara spatii)</small></label>
+                  <input
+                    name="slug"
+                    defaultValue={getAppSectionForSlug(sectionModal.slug) ? '' : sectionModal.slug}
+                    required
+                    placeholder="Ex: meditatii-ghidate"
+                  />
+                  <small className="form-hint">
+                    Sectiunea va aparea pe Dashboard, in blocul "Continut nou".
+                  </small>
+                </div>
+              )}
               <div className="form-group">
                 <label>Descriere</label>
                 <textarea name="description" defaultValue={sectionModal.description || ''} rows={3} placeholder="Optional" />
