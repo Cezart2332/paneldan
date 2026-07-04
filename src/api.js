@@ -18,20 +18,34 @@ export function isLoggedIn() {
   return !!getToken();
 }
 
-async function request(path, { method = 'GET', body } = {}) {
-  const headers = { 'Content-Type': 'application/json', 'X-Admin-Token': getToken() };
+async function request(path, { method = 'GET', body, adminToken } = {}) {
+  const headers = { 'Content-Type': 'application/json' };
+  const tokenHeader = adminToken !== undefined ? adminToken : getToken();
+  if (tokenHeader) headers['X-Admin-Token'] = tokenHeader;
+
   const res = await fetch(`${BASE}${path}`, {
     method,
     headers,
     body: body ? JSON.stringify(body) : undefined,
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data?.error || 'Request failed');
+  if (!res.ok) throw new Error(data?.error || `Request failed (${res.status})`);
   return data;
 }
 
 export const adminApi = {
-  login: (token) => request('/api/admin/login', { method: 'POST', body: { token } }),
+  adminStatus: () => request('/api/admin/ping'),
+  login: async (token) => {
+    const trimmed = String(token || '').trim();
+    const res = await fetch(`${BASE}/api/admin/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: trimmed }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data?.error || `Request failed (${res.status})`);
+    return data;
+  },
   stats: () => request('/api/admin/stats'),
   // Users
   users: (page = 1, search = '') => request(`/api/admin/users?page=${page}&limit=50&search=${encodeURIComponent(search)}`),
