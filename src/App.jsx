@@ -12,6 +12,7 @@ import BugReportsPage from './pages/BugReportsPage';
 import VideosPage from './pages/VideosPage';
 import ChallengesPage from './pages/ChallengesPage';
 import AnnouncementsPage from './pages/AnnouncementsPage';
+import BooksPage from './pages/BooksPage';
 import Sidebar from './components/Sidebar';
 import './App.css';
 
@@ -36,6 +37,7 @@ function App() {
             <Route path="/videos" element={<VideosPage />} />
             <Route path="/challenges" element={<ChallengesPage />} />
             <Route path="/announcements" element={<AnnouncementsPage />} />
+            <Route path="/books" element={<BooksPage />} />
           </Routes>
         </main>
       </div>

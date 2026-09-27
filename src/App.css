@@ -1809,3 +1809,89 @@ tbody tr:hover {
     flex-wrap: wrap;
   }
 }
+
+/* ─── Carti PDF ─── */
+.form-success,
+.form-info {
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.form-success {
+  background: rgba(61, 125, 95, 0.1);
+  color: var(--success);
+  border: 1px solid rgba(61, 125, 95, 0.26);
+}
+.form-info {
+  background: rgba(36, 56, 78, 0.07);
+  color: var(--navy);
+  border: 1px solid rgba(36, 56, 78, 0.18);
+}
+.badge--failed { background: rgba(168, 84, 76, 0.12); color: var(--danger); }
+
+.page .form-card + .form-card { margin-top: 18px; }
+.page .stats-grid + .form-card { margin-top: 22px; }
+
+.books-hint { margin: 0 0 14px; line-height: 1.55; }
+.books-hint--auto {
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+  margin: 16px 0 0;
+}
+.books-hint--auto svg { flex-shrink: 0; margin-top: 2px; color: var(--champagne); }
+.books-path {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 12.5px;
+  background: rgba(36, 56, 78, 0.07);
+  border-radius: 6px;
+  padding: 2px 6px;
+  word-break: break-all;
+}
+
+.books-files {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.books-file {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(61, 125, 95, 0.24);
+  background: rgba(61, 125, 95, 0.06);
+}
+.books-file--missing {
+  border-color: rgba(168, 84, 76, 0.3);
+  background: rgba(168, 84, 76, 0.06);
+}
+.books-file__icon { font-size: 20px; color: var(--success); display: flex; }
+.books-file--missing .books-file__icon { color: var(--danger); }
+.books-file__name { font-weight: 700; color: var(--text); }
+.books-file__meta { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+
+.books-progress { margin-bottom: 16px; }
+.books-progress__label { font-size: 14px; font-weight: 600; color: var(--navy); margin-bottom: 8px; }
+.books-progress__bar {
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(36, 56, 78, 0.1);
+  overflow: hidden;
+}
+.books-progress__fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--champagne), var(--success));
+  transition: width 0.4s ease;
+}
+
+.books-error {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--danger);
+  max-width: 360px;
+}

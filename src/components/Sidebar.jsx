@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { FiAlertCircle, FiBarChart2, FiCalendar, FiFileText, FiHelpCircle, FiLayers, FiLogOut, FiMenu, FiUsers, FiVideo, FiTarget, FiBell, FiX } from 'react-icons/fi';
+import { FiAlertCircle, FiBarChart2, FiBookOpen, FiCalendar, FiFileText, FiHelpCircle, FiLayers, FiLogOut, FiMenu, FiUsers, FiVideo, FiTarget, FiBell, FiX } from 'react-icons/fi';
 import { clearToken } from '../api';
 
 const links = [
@@ -14,6 +14,7 @@ const links = [
   { to: '/videos', icon: FiLayers, label: 'Videoclipuri' },
   { to: '/challenges', icon: FiTarget, label: 'Provocări' },
   { to: '/announcements', icon: FiBell, label: 'Anunțuri' },
+  { to: '/books', icon: FiBookOpen, label: 'Cărți PDF' },
 ];
 
 export default function Sidebar({ onLogout }) {

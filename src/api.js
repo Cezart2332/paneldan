@@ -130,4 +130,7 @@ export const adminApi = {
   deleteChallenge: (id) => request(`/api/admin/challenges/${id}`, { method: 'DELETE' }),
   // Announcements
   sendAnnouncement: (data) => request('/api/admin/announcements', { method: 'POST', body: data }),
+  // Carti PDF cadou pentru abonatii Premium/VIP
+  books: () => request('/api/admin/books'),
+  sendBooks: () => request('/api/admin/books/send', { method: 'POST' }),
 };
