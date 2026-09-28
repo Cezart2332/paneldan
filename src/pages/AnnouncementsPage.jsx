@@ -2,7 +2,16 @@ import { useState } from 'react';
 import { FiSend, FiUsers } from 'react-icons/fi';
 import { adminApi } from '../api';
 
-const initialForm = { title: '', body: '', target: 'all' };
+const initialForm = { title: '', body: '', target: 'all', url: '' };
+
+function isValidLink(value) {
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === 'https:' || parsed.protocol === 'http:';
+  } catch {
+    return false;
+  }
+}
 
 export default function AnnouncementsPage() {
   const [form, setForm] = useState(initialForm);
@@ -21,6 +30,11 @@ export default function AnnouncementsPage() {
       setMessage('Titlul si mesajul sunt obligatorii.');
       return;
     }
+    const url = form.url.trim();
+    if (url && !isValidLink(url)) {
+      setMessage('Linkul trebuie sa inceapa cu https://');
+      return;
+    }
     setSending(true);
     setMessage('');
     setResult(null);
@@ -30,6 +44,7 @@ export default function AnnouncementsPage() {
         title: form.title.trim(),
         body: form.body.trim(),
         target: form.target,
+        ...(url ? { url } : {}),
       });
       setResult(res);
       setForm(initialForm);
@@ -88,6 +103,21 @@ export default function AnnouncementsPage() {
                 placeholder="Scrie mesajul anuntului aici..."
               />
               <span className="form-hint">{form.body.length}/500</span>
+            </div>
+
+            <div className="form-group">
+              <label>Link (optional)</label>
+              <input
+                type="url"
+                maxLength={500}
+                value={form.url}
+                onChange={(e) => setForm({ ...form, url: e.target.value })}
+                placeholder="https://danfostanxios.ro/..."
+              />
+              <span className="form-hint">
+                In aplicatie, notificarea va avea butonul „Deschide linkul”. Linkurile scrise direct in mesaj devin si
+                ele clickabile.
+              </span>
             </div>
 
             <div className="form-group">
