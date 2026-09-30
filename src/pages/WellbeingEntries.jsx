@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { adminApi } from '../api';
 
-const labels = { home:'Acasă',work:'Muncă',travel:'Deplasare',social:'Social',other:'Altul',poor:'Slab',average:'Mediu',good:'Bun',none:'Fără',some:'Puțină',much:'Multă',rest:'Odihnă',walk:'Plimbare',exercise:'Mișcare',breathing:'Respirație',grounding:'Grounding',helpful:'M-a ajutat',neutral:'Neutru',unhelpful:'Nu m-a ajutat',completed:'Încheiat',stopped:'Oprit' };
+const labels = { home:'Acasă',work:'Muncă',travel:'Deplasare',social:'Social',other:'Altul',poor:'Slab',average:'Mediu',good:'Bun',none:'Fără',some:'Puțină',much:'Multă',rest:'Odihnă',walk:'Plimbare',exercise:'Mișcare',breathing:'Respirație',grounding:'Observă ce te înconjoară',helpful:'M-a ajutat',neutral:'Neutru',unhelpful:'Nu m-a ajutat',completed:'Încheiat',stopped:'Oprit' };
 function fmtDate(row) {
   // Show the time actually reported on the phone, independently of admin timezone.
   return new Date(Date.parse(row.occurredAt)-row.timezoneOffset*60000).toISOString().replace('T',' ').slice(0,16);
