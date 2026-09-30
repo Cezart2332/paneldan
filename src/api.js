@@ -18,7 +18,7 @@ export function isLoggedIn() {
   return !!getToken();
 }
 
-async function request(path, { method = 'GET', body, adminToken } = {}) {
+async function request(path, { method = 'GET', body, adminToken, signal } = {}) {
   const headers = { 'Content-Type': 'application/json' };
   const tokenHeader = adminToken !== undefined ? adminToken : getToken();
   if (tokenHeader) headers['X-Admin-Token'] = tokenHeader;
@@ -27,6 +27,7 @@ async function request(path, { method = 'GET', body, adminToken } = {}) {
     method,
     headers,
     body: body ? JSON.stringify(body) : undefined,
+    signal,
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data?.error || `Request failed (${res.status})`);
@@ -47,6 +48,9 @@ export const adminApi = {
     return data;
   },
   stats: () => request('/api/admin/stats'),
+  analytics: (params, signal) => request(`/api/admin/analytics?${new URLSearchParams(params)}`, {signal}),
+  subscriptions: (params, signal) => request(`/api/admin/subscriptions?${new URLSearchParams(params)}`, {signal}),
+  importRevenue: (csv) => request('/api/admin/analytics/import', {method:'POST',body:{csv}}),
   // Users
   users: (page = 1, search = '') => request(`/api/admin/users?page=${page}&limit=50&search=${encodeURIComponent(search)}`),
   // Progress

@@ -10,6 +10,9 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react()],
+    build: { rollupOptions: { output: { manualChunks(id) {
+      if (id.includes('/node_modules/recharts/') || id.includes('/node_modules/victory-vendor/')) return 'charts';
+    } } } },
     server: {
       proxy: {
         '/api': {
