@@ -50,7 +50,9 @@ export const adminApi = {
   // Users
   users: (page = 1, search = '') => request(`/api/admin/users?page=${page}&limit=50&search=${encodeURIComponent(search)}`),
   // Progress
-  progress: (page = 1, userId = '') => request(`/api/admin/progress?page=${page}&limit=50${userId ? `&user_id=${userId}` : ''}`),
+  progress: (page = 1, userId = '', since = '', until = '') => request(`/api/admin/progress?${new URLSearchParams({page:String(page),limit:'50', ...(userId ? {user_id:userId} : {}), ...(since ? {since} : {}), ...(until ? {until} : {})})}`),
+  wellbeing: (kind, params) => request(`/api/admin/wellbeing/${kind}?${new URLSearchParams(params)}`),
+  wellbeingDetail: (kind, id) => request(`/api/admin/wellbeing/${kind}/${id}`),
   deleteProgress: (id) => request(`/api/admin/progress/${id}`, { method: 'DELETE' }),
   // Questions
   questions: (page = 1, status = '') => request(`/api/admin/questions?page=${page}&limit=50${status ? `&status=${status}` : ''}`),

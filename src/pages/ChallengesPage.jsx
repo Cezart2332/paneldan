@@ -1,4 +1,5 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useInitialLoad } from '../hooks/useInitialLoad';
+import { useState, useCallback } from 'react';
 import { adminApi } from '../api';
 
 const HARDCODED_LEVELS = [
@@ -55,7 +56,7 @@ export default function ChallengesPage() {
     }
   }, []);
 
-  useEffect(() => { fetchChallenges(); }, [fetchChallenges]);
+  useInitialLoad(fetchChallenges);
 
   const handleSaveChallenge = async (e) => {
     e.preventDefault();

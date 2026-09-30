@@ -1,4 +1,5 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useInitialLoad } from '../hooks/useInitialLoad';
+import { useState, useCallback } from 'react';
 import { adminApi } from '../api';
 
 export default function UsersPage() {
@@ -14,11 +15,11 @@ export default function UsersPage() {
       const res = await adminApi.users(page, search);
       setUsers(res.items || []);
       setTotal(res.total || 0);
-    } catch {}
+    } catch { /* Keep the existing data when the request fails. */ }
     setLoading(false);
   }, [page, search]);
 
-  useEffect(() => { load(); }, [load]);
+  useInitialLoad(load);
 
   const totalPages = Math.max(1, Math.ceil(total / 50));
 

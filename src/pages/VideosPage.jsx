@@ -1,4 +1,5 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useInitialLoad } from '../hooks/useInitialLoad';
+import { useState, useCallback } from 'react';
 import { adminApi } from '../api';
 import {
   FiActivity,
@@ -110,8 +111,8 @@ export default function VideosPage() {
   const [activeSectionId, setActiveSectionId] = useState(null);
 
   // Modals
-  const [sectionModal, setSectionModal] = useState(null);
-  const [subsectionModal, setSubsectionModal] = useState(null);
+  const [sectionModal, setSectionModalState] = useState(null);
+  const [subsectionModal, setSubsectionModalState] = useState(null);
   const [videoModal, setVideoModal] = useState(null);
   const [uploadingId, setUploadingId] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
@@ -121,19 +122,21 @@ export default function VideosPage() {
   const [sectionMode, setSectionMode] = useState('new');
   const [appSlug, setAppSlug] = useState(APP_SECTIONS[0].slug);
 
-  useEffect(() => {
-    if (subsectionModal) {
-      setSelectedIcon(subsectionModal.icon_name || 'play');
+  const setSubsectionModal = (value) => {
+    if (value) {
+      setSelectedIcon(value.icon_name || 'play');
       setIconPickerOpen(false);
     }
-  }, [subsectionModal]);
-
-  useEffect(() => {
-    if (!sectionModal) return;
-    const appSection = getAppSectionForSlug(sectionModal.slug);
-    setSectionMode(appSection ? 'app' : 'new');
-    setAppSlug(appSection ? appSection.slug : APP_SECTIONS[0].slug);
-  }, [sectionModal]);
+    setSubsectionModalState(value);
+  };
+  const setSectionModal = (value) => {
+    if (value) {
+      const appSection = getAppSectionForSlug(value.slug);
+      setSectionMode(appSection ? 'app' : 'new');
+      setAppSlug(appSection ? appSection.slug : APP_SECTIONS[0].slug);
+    }
+    setSectionModalState(value);
+  };
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
@@ -149,17 +152,15 @@ export default function VideosPage() {
       setSubsections(subRes.items || []);
       setVideos(vidRes.items || []);
       // Auto-select first section if none active
-      if (!activeSectionId && secs.length > 0) {
-        setActiveSectionId(secs[0].id);
-      }
+      setActiveSectionId(current => current || secs[0]?.id || null);
     } catch (e) {
       setError(e.message || 'Eroare la incarcarea datelor');
     } finally {
       setLoading(false);
     }
-  }, [activeSectionId]);
+  }, []);
 
-  useEffect(() => { fetchAll(); }, []);
+  useInitialLoad(fetchAll);
 
   const activeSection = sections.find((s) => s.id === activeSectionId);
   const sectionSubsections = subsections.filter((s) => s.section_id === activeSectionId);

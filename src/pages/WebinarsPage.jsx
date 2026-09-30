@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useInitialLoad } from '../hooks/useInitialLoad';
+import { useCallback, useState } from 'react';
 import { FiEdit2, FiTrash2, FiVideo } from 'react-icons/fi';
 import { adminApi } from '../api';
 
@@ -46,9 +47,7 @@ export default function WebinarsPage() {
     }
   }, [page, statusFilter, showUpcoming]);
 
-  useEffect(() => {
-    load();
-  }, [load]);
+  useInitialLoad(load);
 
   const resetForm = () => {
     setForm(initialForm);

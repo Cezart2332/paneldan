@@ -1,3 +1,4 @@
+import { useInitialLoad } from '../hooks/useInitialLoad';
 import { useEffect, useState, useCallback } from 'react';
 import { FiCalendar, FiChevronLeft, FiChevronRight, FiClock, FiEdit2, FiTrash2, FiUser } from 'react-icons/fi';
 import { adminApi } from '../api';
@@ -25,7 +26,7 @@ export default function MeetingsPage() {
       const res = await adminApi.meetings({ page, upcoming: showUpcoming, limit: 50 });
       setMeetings(res.items || []);
       setTotal(res.total || 0);
-    } catch {}
+    } catch { /* Keep the existing data when the request fails. */ }
     setLoading(false);
   }, [page, showUpcoming]);
 
@@ -47,8 +48,8 @@ export default function MeetingsPage() {
     setCalendarLoading(false);
   }, [monthCursor]);
 
-  useEffect(() => { load(); }, [load]);
-  useEffect(() => { loadCalendar(); }, [loadCalendar]);
+  useInitialLoad(load);
+  useInitialLoad(loadCalendar);
 
   // Load users for the dropdown
   useEffect(() => {
@@ -71,7 +72,7 @@ export default function MeetingsPage() {
       }
       resetForm();
       await Promise.all([load(), loadCalendar()]);
-    } catch {}
+    } catch { /* Keep the existing data when the request fails. */ }
   };
 
   const handleEdit = (m) => {
@@ -91,7 +92,7 @@ export default function MeetingsPage() {
     try {
       await adminApi.deleteMeeting(id);
       await Promise.all([load(), loadCalendar()]);
-    } catch {}
+    } catch { /* Keep the existing data when the request fails. */ }
   };
 
   const handleStatusChange = async (id, status) => {
@@ -99,7 +100,7 @@ export default function MeetingsPage() {
       await adminApi.updateMeeting(id, { status });
       setMeetings((prev) => prev.map((m) => m.id === id ? { ...m, status } : m));
       setCalendarMeetings((prev) => prev.map((m) => m.id === id ? { ...m, status } : m));
-    } catch {}
+    } catch { /* Keep the existing data when the request fails. */ }
   };
 
   const totalPages = Math.max(1, Math.ceil(total / 50));

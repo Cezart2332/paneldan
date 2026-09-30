@@ -322,6 +322,15 @@ body {
 }
 
 /* ─── Toolbar & inputs ─── */
+.wellbeing-detail {
+  padding: 24px;
+  margin: 24px 0;
+  border: 1px solid var(--border-mid);
+  border-radius: var(--radius-sm);
+  background: var(--glass-strong);
+  overflow-wrap: anywhere;
+}
+.wellbeing-detail p { margin: 10px 0; line-height: 1.6; }
 .toolbar {
   display: flex;
   flex-wrap: wrap;

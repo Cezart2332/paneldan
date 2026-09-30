@@ -1,4 +1,5 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useInitialLoad } from '../hooks/useInitialLoad';
+import { useState, useCallback } from 'react';
 import { FiCheckCircle, FiMail } from 'react-icons/fi';
 import { adminApi } from '../api';
 
@@ -18,17 +19,17 @@ export default function QuestionsPage() {
       const res = await adminApi.questions(page, statusFilter);
       setQuestions(res.items || []);
       setTotal(res.total || 0);
-    } catch {}
+    } catch { /* Keep the existing data when the request fails. */ }
     setLoading(false);
   }, [page, statusFilter]);
 
-  useEffect(() => { load(); }, [load]);
+  useInitialLoad(load);
 
   const handleStatusChange = async (id, newStatus) => {
     try {
       await adminApi.updateQuestion(id, newStatus, undefined);
       setQuestions((prev) => prev.map((q) => q.id === id ? { ...q, status: newStatus } : q));
-    } catch {}
+    } catch { /* Keep the existing data when the request fails. */ }
   };
 
   const handleReplyChange = (id, value) => {
@@ -54,7 +55,7 @@ export default function QuestionsPage() {
         };
       }));
       setReplyDrafts((prev) => ({ ...prev, [questionItem.id]: replyText }));
-    } catch {}
+    } catch { /* Keep the existing data when the request fails. */ }
     setSavingReplyId(null);
   };
 

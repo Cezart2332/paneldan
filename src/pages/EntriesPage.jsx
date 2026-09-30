@@ -1,26 +1,42 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { FiTrash2 } from 'react-icons/fi';
 import { adminApi } from '../api';
+import WellbeingEntries from './WellbeingEntries';
+
+function EntryTabs({ kind, onChange }) {
+  return <div className="toolbar" role="tablist" aria-label="Tipul de progres">{[['journal','Jurnale'],['checkins','Check-in-uri'],['sessions','Sesiuni SOS']].map(([id,label]) => <button key={id} role="tab" aria-selected={kind===id} className={`btn ${kind===id?'btn-primary':'btn-ghost'}`} onClick={()=>onChange(id)}>{label}</button>)}</div>;
+}
 
 export default function EntriesPage() {
+  const [kind, setKind] = useState('journal');
+  return <><EntryTabs kind={kind} onChange={setKind} />{kind === 'journal' ? <JournalEntries /> : <WellbeingEntries key={kind} kind={kind} />}</>;
+}
+function JournalEntries() {
   const [entries, setEntries] = useState([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [userFilter, setUserFilter] = useState('');
+  const [since, setSince] = useState('');
+  const [until, setUntil] = useState('');
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [expandedCells, setExpandedCells] = useState({});
+  const requestVersion = useRef(0);
 
   const load = useCallback(async () => {
+    const version = ++requestVersion.current;
     setLoading(true);
     try {
-      const res = await adminApi.progress(page, userFilter);
+      const res = await adminApi.progress(page, userFilter, since ? new Date(`${since}T00:00:00`).toISOString() : '', until ? new Date(`${until}T23:59:59.999`).toISOString() : '');
+      if (requestVersion.current !== version) return;
       setEntries(res.items || []);
       setTotal(res.total || 0);
-    } catch {}
-    setLoading(false);
-  }, [page, userFilter]);
+      setError('');
+    } catch (failure) { if (requestVersion.current === version) setError(failure.message); }
+    if (requestVersion.current === version) setLoading(false);
+  }, [page, userFilter, since, until]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => { const timer = setTimeout(load, 0); return () => { clearTimeout(timer); requestVersion.current += 1; }; }, [load]);
 
   const handleDelete = async (id) => {
     if (!confirm('Sigur vrei să ștergi această intrare?')) return;
@@ -28,7 +44,7 @@ export default function EntriesPage() {
       await adminApi.deleteProgress(id);
       setEntries((prev) => prev.filter((e) => e.id !== id));
       setTotal((t) => t - 1);
-    } catch {}
+    } catch (failure) { setError(failure.message); }
   };
 
   const toggleCell = (entryId, field) => {
@@ -46,6 +62,8 @@ export default function EntriesPage() {
       </div>
 
       <div className="toolbar">
+        <label>De la <input aria-label="Jurnale de la" type="date" className="search-input" value={since} onChange={(e)=>{setSince(e.target.value);setPage(1);}} /></label>
+        <label>Până la <input aria-label="Jurnale până la" type="date" className="search-input" value={until} onChange={(e)=>{setUntil(e.target.value);setPage(1);}} /></label>
         <input
           type="text"
           placeholder="Filtrează după User ID..."
@@ -54,6 +72,7 @@ export default function EntriesPage() {
           className="search-input search-input--sm"
         />
       </div>
+      {error && <p role="alert">{error} <button className="btn btn-ghost" onClick={load}>Reîncearcă</button></p>}
 
       {loading ? (
         <div className="page-loading">Se încarcă...</div>

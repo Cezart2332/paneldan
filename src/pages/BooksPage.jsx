@@ -1,3 +1,4 @@
+import { useInitialLoad } from '../hooks/useInitialLoad';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { FiAlertTriangle, FiBookOpen, FiCheckCircle, FiClock, FiRefreshCw, FiSend, FiUsers, FiXCircle } from 'react-icons/fi';
 import { adminApi } from '../api';
@@ -51,9 +52,7 @@ export default function BooksPage() {
     return () => clearInterval(pollRef.current);
   }, [running, load]);
 
-  useEffect(() => {
-    load();
-  }, [load]);
+  useInitialLoad(load);
 
   const handleSend = async () => {
     const pending = data?.stats?.pending || 0;

@@ -1,4 +1,5 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useInitialLoad } from '../hooks/useInitialLoad';
+import { useState, useCallback } from 'react';
 import { FiAlertCircle, FiMail } from 'react-icons/fi';
 import { adminApi } from '../api';
 
@@ -27,9 +28,7 @@ export default function BugReportsPage() {
     setLoading(false);
   }, [page, expandedId]);
 
-  useEffect(() => {
-    load();
-  }, [load]);
+  useInitialLoad(load);
 
   const handleStatusChange = async (id, nextStatus) => {
     setStatusError('');
