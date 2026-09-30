@@ -1,8 +1,6 @@
 import { useEffect, useId, useState } from "react";
 import { Link } from "react-router-dom";
 import {
-  FiArrowDownRight,
-  FiArrowUpRight,
   FiCalendar,
   FiChevronDown,
   FiDownload,
@@ -22,12 +20,15 @@ import {
   YAxis,
 } from "recharts";
 import { adminApi } from "../api";
+import { Metric, Metrics } from "../components/MetricCards";
+import StoreSubscriberCards from "../components/StoreSubscriberCards";
 import {
   dateRange,
   downloadRevenueCsv,
   formatCount as count,
   formatMoney,
   formatPercent as percent,
+  estimateStoreFees,
 } from "../utils/analytics";
 import "../dashboard.css";
 
@@ -382,39 +383,6 @@ export default function AnalyticsDashboard() {
   );
 }
 
-function Metric({ label, value, description, change }) {
-  const currency =
-    typeof value === "string" ? value.match(/^(.*)\s([A-Z]{3})$/) : null;
-  return (
-    <article className="metric-card">
-      <div className="metric-label">
-        {label}
-        {change != null ? (
-          <span className="metric-trend">
-            {change >= 0 ? <FiArrowUpRight /> : <FiArrowDownRight />}
-            {Math.abs(change).toLocaleString("ro-RO")}%
-          </span>
-        ) : null}
-      </div>
-      <strong
-        className={`metric-value${currency ? " metric-value-money" : ""}`}
-      >
-        {currency ? (
-          <>
-            <span>{currency[1]}</span>
-            <small>{currency[2]}</small>
-          </>
-        ) : (
-          value
-        )}
-      </strong>
-      <p>{description}</p>
-    </article>
-  );
-}
-function Metrics({ children }) {
-  return <div className="metrics-grid">{children}</div>;
-}
 function Panel({ title, description, children, action }) {
   return (
     <article className="analytics-card">
@@ -706,6 +674,9 @@ function RevenueBreakdown({ rows, labelKey, label, data }) {
   );
 }
 function RevenueReport({ data: d, onImported }) {
+  const [appleRate, setAppleRate] = useState(0.3);
+  const fees = estimateStoreFees(d.revenue.byStore, appleRate);
+  const estimate = (value) => (fees ? money(d, value) : "—");
   return (
     <>
       <Metrics>
@@ -735,6 +706,61 @@ function RevenueReport({ data: d, onImported }) {
           description={`${dateLabel(d.period.previousFrom)} — ${dateLabel(d.period.previousTo)}`}
         />
       </Metrics>
+      <section
+        className="commission-summary"
+        aria-label="Estimarea comisioanelor"
+      >
+        <div className="commission-heading">
+          <div>
+            <h2>După comisioanele magazinelor</h2>
+            <p>
+              Estimare pentru perioada și moneda selectate, după rambursări și
+              înainte de taxe.
+            </p>
+          </div>
+          <label className="select-field">
+            Comision App Store estimat
+            <select
+              value={appleRate}
+              onChange={(e) => setAppleRate(Number(e.target.value))}
+            >
+              <option value={0.3}>30% · standard, primul an</option>
+              <option value={0.15}>15% · rată redusă</option>
+            </select>
+          </label>
+        </div>
+        <Metrics columns={3}>
+          <Metric
+            label="Comision Google Play"
+            value={estimate(fees?.googleFee)}
+            description="Estimare · 15% din veniturile Google Play"
+          />
+          <Metric
+            label="Comision App Store"
+            value={estimate(fees?.appleFee)}
+            description={`Estimare · ${appleRate * 100}% din veniturile App Store`}
+          />
+          <Metric
+            label="Venit după comisioane"
+            value={estimate(fees?.net)}
+            description="Estimat · Google Play + App Store · înainte de taxe"
+          />
+        </Metrics>
+        <p className="commission-note">
+          Google Play: 15% pentru abonamente cu reînnoire automată. App Store:
+          30% în primul an, 15% pentru Small Business Program sau după un an
+          plătit. Calculul aplică rata Apple aleasă tuturor veniturilor App
+          Store; decontul real poate diferi. Totalul include doar aceste două
+          magazine; plățile manuale, alte platforme și sursele necunoscute sunt
+          excluse.
+          {fees?.missingAmounts > 0
+            ? ` Estimare incompletă: ${count(fees.missingAmounts)} înregistrări fără valoare cunoscută.`
+            : ""}
+          {!fees
+            ? " Datele pe magazine nu sunt disponibile. Actualizează backend-ul și reîncarcă raportul."
+            : ""}
+        </p>
+      </section>
       <RevenueChart data={d} />
       <div className="analytics-columns">
         <Panel
@@ -858,6 +884,7 @@ function SubscriptionsReport({ data: d }) {
           description="Conturi cu expirare plătită înregistrată"
         />
       </Metrics>
+      <StoreSubscriberCards rows={d.subscriptions.byStore} />
       <div className="analytics-columns">
         <Panel
           title="Distribuția abonamentelor"

@@ -1,0 +1,114 @@
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.metric-card {
+  padding: 21px 22px 18px;
+  border: 1px solid #e5e5e5;
+  border-radius: 10px;
+  background: #fff;
+  min-width: 0;
+}
+.metric-label {
+  color: #525252;
+  font-size: 12px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 22px;
+}
+.metric-value {
+  display: block;
+  font-size: 30px;
+  line-height: 1.25;
+  font-weight: 600;
+  letter-spacing: -0.05em;
+  margin: 10px 0 7px;
+  overflow-wrap: anywhere;
+}
+.metric-card p {
+  font-size: 11px;
+  color: #737373;
+  line-height: 1.5;
+}
+.metric-trend {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+  border: 1px solid #e5e5e5;
+  border-radius: 5px;
+  padding: 1px 5px;
+  color: #404040;
+  font-size: 10px;
+}
+.metric-trend svg {
+  font-size: 12px;
+}
+.metric-value-money {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 7px;
+  overflow-wrap: normal;
+}
+.metric-value-money span {
+  white-space: nowrap;
+}
+.metric-value-money small {
+  font-size: 13px;
+  letter-spacing: 0;
+  font-weight: 500;
+  color: #737373;
+  white-space: nowrap;
+}
+
+.metrics-grid-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.metrics-grid-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+@media (max-width: 1180px) {
+  .metrics-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .metrics-grid-3 .metric-card:last-child {
+    grid-column: 1 / -1;
+  }
+}
+@media (max-width: 640px) {
+  .metrics-grid {
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+  .metric-card {
+    padding: 15px;
+  }
+  .metric-label {
+    font-size: 11px;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+  .metric-value {
+    font-size: 25px;
+    margin: 9px 0 6px;
+  }
+  .metric-value-money {
+    font-size: 21px;
+  }
+  .metric-value-money small {
+    font-size: 11px;
+  }
+  .metric-card p {
+    font-size: 10px;
+  }
+}
+@media (max-width: 380px) {
+  .metrics-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { adminApi } from "../api";
 import { FiSearch } from "react-icons/fi";
+import StoreSubscriberCards from "../components/StoreSubscriberCards";
 
 const fmt = (value) =>
   value
@@ -102,6 +103,11 @@ export default function SubscriptionsPage() {
           </button>
         </div>
       ) : null}
+      <StoreSubscriberCards
+        rows={error ? undefined : result.byStore}
+        loading={loading}
+        filtered={Boolean(plan || search)}
+      />
       <div className="table-wrap" aria-busy={loading}>
         <table>
           <caption className="sr-only">
