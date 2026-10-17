@@ -18,6 +18,7 @@ Development requests to `/api` proxy to `http://127.0.0.1:3000`. Override `VITE_
 - Overview: paid subscribers, revenue, app use and outstanding work.
 - Revenue: month/year/custom UTC periods, daily/monthly grouping, previous period/year comparison, currencies, sales/refunds, plan/store breakdown and CSV download.
 - Subscriptions: Basic/Premium/Pro/VIP in paid totals and the paginated list. Trials have a separate indicator and conversion metric.
+- In **Abonamente active**, use **Prelungește global** or a user's **Prelungește** button to add 1–365 days to existing active paid subscriptions. The dialog includes presets, a custom duration, eligibility counts and the new individual expiry. Global extensions apply regardless of list filters. Trials, expired subscriptions and lifetime access are excluded. This grants app access without changing store billing or renewal dates.
 - App activity: video consumption, challenge progress, exact-day 7/30 return, SOS feedback and check-ins.
 - Dan's activity: unanswered questions, response time, completed meetings and open bugs.
 

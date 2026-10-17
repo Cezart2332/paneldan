@@ -50,6 +50,8 @@ export const adminApi = {
   stats: () => request('/api/admin/stats'),
   analytics: (params, signal) => request(`/api/admin/analytics?${new URLSearchParams(params)}`, {signal}),
   subscriptions: (params, signal) => request(`/api/admin/subscriptions?${new URLSearchParams(params)}`, {signal}),
+  subscriptionExtensionPreview: (params, signal) => request(`/api/admin/subscriptions/extension-preview?${new URLSearchParams(params)}`, {signal}),
+  extendSubscriptions: (body) => request('/api/admin/subscriptions/extend', {method:'POST',body}),
   importRevenue: (csv) => request('/api/admin/analytics/import', {method:'POST',body:{csv}}),
   // Users
   users: (page = 1, search = '') => request(`/api/admin/users?page=${page}&limit=50&search=${encodeURIComponent(search)}`),

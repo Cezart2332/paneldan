@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { adminApi } from "../api";
 import { FiSearch } from "react-icons/fi";
 import StoreSubscriberCards from "../components/StoreSubscriberCards";
+import SubscriptionExtensionDialog from "../components/SubscriptionExtensionDialog";
 
 const fmt = (value) =>
   value
@@ -19,6 +20,8 @@ export default function SubscriptionsPage() {
     [error, setError] = useState(""),
     [loading, setLoading] = useState(true),
     [revision, setRevision] = useState(0);
+  const [extensionTarget, setExtensionTarget] = useState(null);
+  const [notice, setNotice] = useState('');
   useEffect(() => {
     const controller = new AbortController();
     const timer = setTimeout(() => {
@@ -48,12 +51,25 @@ export default function SubscriptionsPage() {
   return (
     <div className="page">
       <div className="page-header">
-        <h1>Abonamente active</h1>
-        <p>
-          Basic, Premium, Pro și VIP · un singur abonament activ per cont · fără
-          trial-uri.
-        </p>
+        <div className="subscription-extension-heading">
+          <div>
+            <h1>Abonamente active</h1>
+            <p>
+              Basic, Premium, Pro și VIP · un singur abonament activ per cont · fără
+              trial-uri.
+            </p>
+          </div>
+          <button className="btn btn-primary" onClick={() => setExtensionTarget({scope:'all'})}>Prelungește global</button>
+        </div>
       </div>
+      {notice && <div className="subscription-extension-success" role="status">{notice}</div>}
+      {extensionTarget && <SubscriptionExtensionDialog target={extensionTarget} onClose={() => setExtensionTarget(null)} onExtended={(data) => {
+        setNotice(data.affectedCount
+          ? `${data.affectedCount} ${data.affectedCount === 1 ? 'abonament prelungit' : 'abonamente prelungite'} cu ${data.days} ${data.days === 1 ? 'zi' : 'zile'}.`
+          : 'Nu mai există abonamente eligibile. Nu a fost prelungit niciun abonament.');
+        setExtensionTarget(null);
+        setRevision((value) => value + 1);
+      }} />}
       <div className="toolbar">
         <label className="search-field">
           <FiSearch />
@@ -121,6 +137,7 @@ export default function SubscriptionsPage() {
               <th>Început</th>
               <th>Expiră</th>
               <th>Reînnoire</th>
+              <th>Acțiuni</th>
             </tr>
           </thead>
           <tbody>
@@ -161,17 +178,23 @@ export default function SubscriptionsPage() {
                         ? "Activată"
                         : "Dezactivată"}
                   </td>
+                  <td>
+                    <button className="btn btn-sm" disabled={!row.ends_at}
+                      aria-label={`Prelungește abonamentul pentru ${row.name || row.email || `Cont #${row.user_id}`}`}
+                      title={row.ends_at ? 'Adaugă zile la abonamentul activ' : 'Abonament fără termen de expirare'}
+                      onClick={() => setExtensionTarget({scope:'user',row})}>Prelungește</button>
+                  </td>
                 </tr>
               ))}
             {loading && !result.items.length ? (
               <tr>
-                <td colSpan={6} className="td-empty">
+                <td colSpan={7} className="td-empty">
                   Se încarcă abonamentele…
                 </td>
               </tr>
             ) : !error && !result.items.length ? (
               <tr>
-                <td colSpan={6} className="td-empty">
+                <td colSpan={7} className="td-empty">
                   Nu există abonamente plătite active pentru filtrele alese.
                 </td>
               </tr>
