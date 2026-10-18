@@ -46,7 +46,6 @@ const storeLabel = (value) =>
   ({
     APP_STORE: "App Store",
     GOOGLE_PLAY: "Google Play",
-    STRIPE: "Stripe",
     RC_BILLING: "RevenueCat Billing",
   })[value] || value;
 const dateLabel = (value) =>

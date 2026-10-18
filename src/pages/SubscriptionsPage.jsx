@@ -164,7 +164,6 @@ export default function SubscriptionsPage() {
                       APP_STORE: "App Store",
                       GOOGLE_PLAY: "Google Play",
                       PLAY_STORE: "Google Play",
-                      STRIPE: "Stripe",
                     }[String(row.store || "").toUpperCase()] ||
                       row.store ||
                       "Manual"}

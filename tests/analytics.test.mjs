@@ -38,7 +38,7 @@ test("store fee estimates use revenue after refunds, exclude other stores and su
   const rows = [
     { store: "GOOGLE_PLAY", net: "800", gross: "1000", refunds: "200" },
     { store: "APP_STORE", net: "2000" },
-    { store: "STRIPE", net: "500" },
+    { store: "RC_BILLING", net: "500" },
     { store: "UNKNOWN", net: "999" },
   ];
   assert.deepEqual(estimateStoreFees(rows), {
